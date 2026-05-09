@@ -67,8 +67,12 @@ HPS/
 ├─ datasets/                     # 数据集与导出数据
 ├─ docs/
 │  ├─ reports/                   # 训练/评价报告 (脚本生成产物)
-│  ├─ architecture/              # 架构文档
-│  └─ adr/                       # 架构决策记录
+│  └─ training_guide.md          # 训练参数与指标说明
+├─ .codestable/                  # CodeStable 需求、架构、决策与协作知识库
+│  ├─ attention.md               # AI 协作启动必读约束
+│  ├─ requirements/              # 当前能力愿景与索引
+│  ├─ architecture/              # 架构现状与领域语言
+│  └─ compound/                  # 决策、经验、技巧和探索沉淀
 ├─ start-dev.bat                 # Windows 开发模式启动脚本
 └─ start.bat                     # Windows 单服务启动脚本
 ```
@@ -97,7 +101,7 @@ mysql --version
 
 ```bash
 git clone <your-repo-url>
-cd HypertensionPredictionSystem
+cd HPS
 ```
 
 ### 2. 安装后端依赖
@@ -261,7 +265,7 @@ pnpm test
 
 ```bash
 cd frontend
-pnpm build
+pnpm run build
 ```
 
 ## 模型训练
@@ -420,8 +424,10 @@ Prophet 采用三层结构：
 
 ## 相关文档
 
-- 架构文档：[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
-- 领域语言：[CONTEXT.md](CONTEXT.md)
+- CodeStable 架构入口：[.codestable/architecture/ARCHITECTURE.md](.codestable/architecture/ARCHITECTURE.md)
+- 领域语言与论文口径：[.codestable/architecture/domain-language.md](.codestable/architecture/domain-language.md)
+- 当前能力愿景：[.codestable/requirements/hypertension-risk-prediction-system.md](.codestable/requirements/hypertension-risk-prediction-system.md)
+- 技术选型与架构决策：[.codestable/compound/](.codestable/compound/)
 - 训练报告：[docs/reports/model_report.md](docs/reports/model_report.md)
 - Prophet 评价报告：[docs/reports/prophet_evaluation_report.md](docs/reports/prophet_evaluation_report.md)
 - 趋势融合评价报告：[docs/reports/trend_fusion_report.md](docs/reports/trend_fusion_report.md)
