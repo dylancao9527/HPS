@@ -1,0 +1,98 @@
+/* ==============================================================================
+   Home Dashboard
+   ============================================================================== */
+.dashboard-links {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-top: 0.25rem;
+}
+
+.dashboard-primary-action,
+.dashboard-secondary-action {
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid var(--card-border);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.dashboard-primary-action {
+  min-height: 150px;
+  padding: 1.2rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 84%, var(--accent-light));
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.dashboard-primary-action strong {
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+.dashboard-primary-action span:last-child,
+.dashboard-secondary-action span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.dashboard-action-kicker {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-secondary-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dashboard-secondary-action {
+  min-height: 70px;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.dashboard-secondary-action strong {
+  font-size: 1rem;
+}
+
+.dashboard-primary-action:hover,
+.dashboard-secondary-action:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--card-border));
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-primary-action:focus-visible,
+.dashboard-secondary-action:focus-visible {
+  outline: 3px solid var(--accent-light);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-primary-action,
+  .dashboard-secondary-action {
+    transition: none;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .dashboard-links {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-primary-action {
+    min-height: 130px;
+  }
+}

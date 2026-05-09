@@ -1,0 +1,5 @@
+/* ==============================================================================
+   Missing Data
+   ============================================================================== */
+.missing-data { text-align: center; padding: 1rem; color: var(--text-secondary); }
+.missing-data p { margin-bottom: 0.6rem; font-size: 0.95rem; }

@@ -1,0 +1,29 @@
+.risk-overview {
+  --risk-accent: var(--accent);
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.risk-overview--low {
+  --risk-accent: var(--success);
+}
+
+.risk-overview--medium {
+  --risk-accent: var(--warning);
+}
+
+.risk-overview--high {
+  --risk-accent: var(--danger);
+}
+
+.risk-badge {
+  border: 1px solid var(--risk-accent);
+  color: var(--risk-accent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--risk-accent) 20%, transparent);
+}
+
+.risk-level-heading {
+  color: var(--risk-accent);
+}

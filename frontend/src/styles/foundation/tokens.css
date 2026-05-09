@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #f6faf8;
+  --card-bg: #ffffff;
+  --card-border: #d9e7e3;
+  --text: #172a2a;
+  --text-secondary: #52645f;
+  --accent: #0e7490;
+  --accent-hover: #155e75;
+  --accent-light: rgba(14, 116, 144, 0.1);
+  --border: #d3dfdc;
+  --input-bg: #fbfefd;
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --info: #2563eb;
+  --navbar-bg: #ffffff;
+  --navbar-border: #d9e7e3;
+  --sidebar-bg: #ffffff;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --page-max-width: 1180px;
+  --page-narrow-width: 960px;
+}
+
+[data-theme="dark"] {
+  --bg: #101816;
+  --card-bg: #16221f;
+  --card-border: #2b3f3a;
+  --text: #edf8f5;
+  --text-secondary: #a7bab4;
+  --accent: #22d3ee;
+  --accent-hover: #67e8f9;
+  --accent-light: rgba(34, 211, 238, 0.14);
+  --border: #334b45;
+  --input-bg: #111c19;
+  --success: #34d399;
+  --warning: #f59e0b;
+  --danger: #f87171;
+  --info: #60a5fa;
+  --navbar-bg: #16221f;
+  --navbar-border: #2b3f3a;
+  --sidebar-bg: #121d1a;
+  --shadow: 0 1px 2px rgba(0,0,0,0.28);
+  --shadow-md: 0 12px 28px rgba(0,0,0,0.34);
+}

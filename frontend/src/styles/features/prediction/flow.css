@@ -1,0 +1,301 @@
+/* ==============================================================================
+   Prediction Feature - Flow / Form
+   ============================================================================== */
+
+.prediction-hero .page-title { font-size: 1.35rem; margin-bottom: 0.3rem; }
+
+.prediction-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.prediction-hero {
+  background: color-mix(in srgb, var(--card-bg) 90%, var(--accent-light));
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+
+.prediction-hero .page-desc {
+  margin-bottom: 0;
+  max-width: 720px;
+}
+
+.prediction-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.prediction-section {
+  margin-bottom: 0;
+}
+
+.prediction-page-shell {
+  padding: 1.35rem;
+}
+
+.prediction-page-shell .prediction-page {
+  gap: 0;
+}
+
+.prediction-page-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prediction-detail-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--card-bg) 90%, var(--accent-light));
+}
+
+.prediction-detail-entry .card-title {
+  margin-bottom: 0.25rem;
+}
+
+.prediction-detail-entry .page-section-desc {
+  max-width: 48ch;
+}
+
+.prediction-status-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.prediction-status-card--neutral {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.prediction-status-card--success {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.prediction-status-card--warning {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.24);
+}
+
+.prediction-status-card--danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.prediction-status-card--success .prediction-status-text {
+  color: var(--success);
+}
+
+.prediction-status-card--warning .prediction-status-text {
+  color: var(--warning);
+}
+
+.prediction-status-card--danger .prediction-status-text {
+  color: var(--danger);
+}
+
+.prediction-status-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.prediction-status-icon.is-spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+.prediction-status-text {
+  font-weight: 500;
+}
+
+.prediction-status-meta {
+  color: var(--text-secondary);
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.prediction-readiness-card {
+  padding: 1.35rem;
+}
+
+.prediction-readiness-grid {
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.prediction-readiness-item {
+  min-height: 150px;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--card-bg) 90%, var(--accent-light));
+  justify-content: flex-start;
+}
+
+.prediction-readiness-item--success {
+  border-color: rgba(34, 197, 94, 0.24);
+}
+
+.prediction-readiness-item--warning {
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.prediction-readiness-item--danger {
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.prediction-readiness-item .btn {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.prediction-status-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.prediction-status-inline .prediction-status-icon {
+  margin-top: 0.15rem;
+}
+
+.prediction-readiness-card .prediction-status-meta {
+  margin-left: 0;
+}
+
+.prediction-forecast-grid--compact {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.prediction-forecast-grid--compact .prediction-forecast-option {
+  flex: 1 1 58px;
+  min-width: 58px;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
+.prediction-supporting-text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.prediction-supporting-text + .prediction-supporting-text {
+  margin-top: 0.45rem;
+}
+
+.prediction-supporting-text--warning {
+  color: var(--warning);
+}
+
+.prediction-block-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  border-radius: var(--radius);
+  background: rgba(239, 68, 68, 0.08);
+  padding: 0.9rem 1rem;
+}
+
+.prediction-block-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
+.prediction-block-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.prediction-block-copy strong {
+  display: block;
+  color: var(--danger);
+  font-size: 0.95rem;
+}
+
+.prediction-block-copy p {
+  margin: 0.15rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.prediction-forecast-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.prediction-forecast-label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.prediction-forecast-grid {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.prediction-forecast-option {
+  flex: 1;
+}
+
+.prediction-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.prediction-loading-text {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .prediction-hero { padding: 1.1rem; }
+  .prediction-toolbar { justify-content: flex-end; }
+  .prediction-page-shell { padding: 1rem; }
+  .prediction-readiness-grid { grid-template-columns: 1fr; }
+  .prediction-readiness-item { min-height: auto; }
+  .prediction-detail-entry {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .prediction-detail-entry .btn {
+    width: 100%;
+  }
+  .prediction-block-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .prediction-block-notice .btn {
+    width: 100%;
+  }
+  .prediction-status-card { flex-wrap: wrap; }
+  .prediction-status-meta { margin-left: 0; width: 100%; }
+  .prediction-forecast-grid { flex-direction: column; }
+  .prediction-forecast-grid--compact { flex-direction: row; }
+}
+
+@media (max-width: 480px) {
+  .prediction-hero { padding: 1rem; }
+  .prediction-page { gap: 0.85rem; }
+}

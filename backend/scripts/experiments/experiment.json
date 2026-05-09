@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "test_size": 0.2,
+  "threshold_valid_size": 0.1,
+  "cv_splits": 5,
+  "early_stopping_rounds": 50,
+  "max_boost_rounds": 1000,
+  "threshold_search_mode": "f1",
+  "threshold_min_recall": null,
+  "missing_value_strategy": "native",
+  "learning_rate": 0.05,
+  "bp_meds_policy": "neutralized_for_conservative_inference",
+  "label_mode": "diagnosis_plus_rule",
+  "enable_feature_ablation": false,
+  "multi_seed_audit_seeds": []
+}

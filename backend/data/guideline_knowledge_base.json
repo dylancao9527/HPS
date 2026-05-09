@@ -1,0 +1,252 @@
+[
+  {
+    "id": "followup_high_bp_001",
+    "topic": "follow_up",
+    "priority": "high",
+    "trigger_conditions": {
+      "risk_level": ["medium", "high"],
+      "high_bp_days_min": 2,
+      "trend_direction": ["upward", "volatile"],
+      "confidence_level": ["medium", "high"]
+    },
+    "summary_template": "从最近记录来看，你的血压需要继续关注。",
+    "explanation_template": "最近几天血压有上升趋势，并且已经出现连续偏高记录。",
+    "action_templates": [
+      "建议未来3天继续保持血压记录。",
+      "尽量减少高盐饮食并保持规律作息。",
+      "如果仍持续偏高，可考虑线下咨询医生。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "血压监测与生活方式干预",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "followup_stable_high_bp_001",
+    "topic": "follow_up",
+    "priority": "high",
+    "trigger_conditions": {
+      "risk_level": ["medium", "high"],
+      "high_bp_days_min": 2
+    },
+    "summary_template": "从最近记录来看，血压情况仍建议继续关注。",
+    "explanation_template": "近期已有连续偏高记录，建议继续监测后续变化。",
+    "action_templates": [
+      "建议未来3天继续保持血压记录。",
+      "尽量减少高盐饮食并保持规律作息。",
+      "如果后续仍持续偏高，可考虑线下咨询医生。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "血压监测与生活方式干预",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "confidence_low_001",
+    "topic": "confidence_notice",
+    "priority": "medium",
+    "trigger_conditions": {
+      "record_days_max": 2
+    },
+    "summary_template": "当前记录还不够完整，结果更适合作为趋势参考。",
+    "explanation_template": "近期可用记录天数较少，系统还无法形成更稳定的判断。",
+    "action_templates": [
+      "建议继续补充近几天的血压记录。",
+      "尽量固定在相近时间测量，便于观察趋势。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "血压监测建议",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "grade3_urgent_001",
+    "topic": "urgent",
+    "priority": "high",
+    "trigger_conditions": {
+      "bp_grade": ["grade3"]
+    },
+    "summary_template": "预测血压均值处于3级高血压范围，建议尽快就医。",
+    "explanation_template": "预测期内平均收缩压≥180mmHg或舒张压≥110mmHg，属于重度高血压，需要及时医疗干预。",
+    "action_templates": [
+      "建议尽快前往医院进行血压评估，不要延误。",
+      "就诊前避免剧烈运动和情绪激动。",
+      "记录近期血压数值，就诊时携带供医生参考。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "高血压分级与处理原则",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "grade2_upward_001",
+    "topic": "follow_up",
+    "priority": "high",
+    "trigger_conditions": {
+      "bp_grade": ["grade2"],
+      "trend_direction": ["upward", "volatile"],
+      "risk_level": ["high"]
+    },
+    "summary_template": "预测血压处于2级高血压范围且持续上升，建议尽快就医评估。",
+    "explanation_template": "预测期内平均收缩压≥160mmHg或舒张压≥100mmHg，结合上升趋势，风险较高。",
+    "action_templates": [
+      "建议尽快前往医院进行血压评估，必要时考虑药物干预。",
+      "记录近期血压变化，就诊时携带记录供医生参考。",
+      "避免剧烈运动和高盐饮食，保持情绪稳定。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "高血压分级与处理原则",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "grade2_stable_001",
+    "topic": "follow_up",
+    "priority": "high",
+    "trigger_conditions": {
+      "bp_grade": ["grade2"],
+      "trend_direction": ["stable"]
+    },
+    "summary_template": "预测血压处于2级高血压范围，建议定期随访。",
+    "explanation_template": "预测期内平均收缩压≥160mmHg或舒张压≥100mmHg，趋势暂时稳定，但仍需持续关注。",
+    "action_templates": [
+      "建议近期安排一次医院随访，评估是否需要调整治疗方案。",
+      "坚持低盐低脂饮食，每日食盐摄入不超过5g。",
+      "保持规律作息，避免过度劳累。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "高血压分级与处理原则",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "grade1_upward_001",
+    "topic": "follow_up",
+    "priority": "medium",
+    "trigger_conditions": {
+      "bp_grade": ["grade1"],
+      "trend_direction": ["upward", "volatile"]
+    },
+    "summary_template": "预测血压处于1级高血压范围且有上升趋势，建议加强监测。",
+    "explanation_template": "预测期内平均收缩压在140-159mmHg或舒张压在90-99mmHg之间，趋势仍在上升。",
+    "action_templates": [
+      "建议每天固定时间测量血压，连续记录至少一周。",
+      "减少高盐饮食，增加有氧运动（如快走），每次30分钟以上。",
+      "如果一周内血压未见改善，建议就医咨询。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "1级高血压管理建议",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "grade1_stable_001",
+    "topic": "lifestyle",
+    "priority": "medium",
+    "trigger_conditions": {
+      "bp_grade": ["grade1"],
+      "trend_direction": ["stable"]
+    },
+    "summary_template": "预测血压处于1级高血压范围，趋势稳定，建议坚持生活方式干预。",
+    "explanation_template": "预测期内平均收缩压在140-159mmHg或舒张压在90-99mmHg之间，趋势暂时稳定。",
+    "action_templates": [
+      "坚持低盐饮食，每日食盐摄入控制在5g以内。",
+      "保持规律有氧运动，每周至少150分钟中等强度运动。",
+      "定期监测血压，建议每周至少测量2-3次。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "生活方式干预",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "normal_high_upward_001",
+    "topic": "prevention",
+    "priority": "low",
+    "trigger_conditions": {
+      "bp_grade": ["normal_high"],
+      "trend_direction": ["upward"]
+    },
+    "summary_template": "预测血压处于正常高值范围且有上升趋势，建议提前干预。",
+    "explanation_template": "预测期内平均收缩压在120-139mmHg或舒张压在80-89mmHg之间，趋势仍在上升，属于高血压前期。",
+    "action_templates": [
+      "建议减少高盐、高脂饮食，增加蔬菜水果摄入。",
+      "保持规律运动习惯，有助于控制血压上升趋势。",
+      "建议每月至少测量一次血压，关注变化趋势。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "正常高值血压管理",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  },
+  {
+    "id": "normal_stable_001",
+    "topic": "maintenance",
+    "priority": "low",
+    "trigger_conditions": {
+      "bp_grade": ["normal"],
+      "trend_direction": ["stable"],
+      "risk_level": ["low"]
+    },
+    "summary_template": "预测血压处于正常范围，整体状况良好。",
+    "explanation_template": "预测期内平均血压在正常范围内，趋势稳定，风险较低。",
+    "action_templates": [
+      "继续保持当前的健康生活方式。",
+      "建议定期记录血压，每月至少测量一次。"
+    ],
+    "source": {
+      "guideline": "中国高血压防治指南（2024年修订版）",
+      "section": "正常血压人群健康管理",
+      "version": "2024"
+    },
+    "safety_boundary": {
+      "avoid_diagnosis": true,
+      "avoid_medication_adjustment": true
+    }
+  }
+]

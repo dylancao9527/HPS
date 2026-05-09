@@ -1,0 +1,218 @@
+/* ==============================================================================
+   Weekly Report Feature
+   ============================================================================== */
+
+.weekly-report-summary,
+.weekly-report-overview,
+.weekly-report-chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.weekly-report-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.weekly-report-summary-copy,
+.weekly-report-chart-copy,
+.weekly-report-overview p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.weekly-report-period-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.weekly-report-period-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.7rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-light) 76%, var(--card-bg));
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.weekly-report-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.weekly-report-metric-grid--compact {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+
+.weekly-report-metric {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+}
+
+.weekly-report-metric-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weekly-report-metric-label {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.weekly-report-metric-tone {
+  flex-shrink: 0;
+  padding: 0.22rem 0.5rem;
+  border-radius: var(--radius);
+  background: rgba(15, 118, 110, 0.07);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.weekly-report-metric-change {
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.weekly-report-metric-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.weekly-report-metric-values div {
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
+}
+
+.weekly-report-metric-values dt {
+  margin: 0 0 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.weekly-report-metric-values dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.weekly-report-metric-helper,
+.weekly-report-data-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.weekly-report-metric--good {
+  border-color: rgba(22, 163, 74, 0.24);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.weekly-report-metric--good .weekly-report-metric-tone {
+  color: var(--success);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.weekly-report-metric--warning {
+  border-color: rgba(217, 119, 6, 0.24);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.weekly-report-metric--warning .weekly-report-metric-tone {
+  color: var(--warning);
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.weekly-report-metric--insufficient {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--card-bg) 92%, var(--accent-light));
+}
+
+.weekly-report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.weekly-report-state {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.weekly-report-state--error {
+  color: var(--danger);
+}
+
+.weekly-report-chart {
+  width: 100%;
+  height: 320px;
+}
+
+.weekly-report-empty-chart {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.weekly-report-empty-chart strong {
+  color: var(--text);
+}
+
+@media (max-width: 960px) {
+  .weekly-report-metric-grid,
+  .weekly-report-metric-grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .weekly-report-metric-grid,
+  .weekly-report-metric-grid--compact,
+  .weekly-report-metric-values {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-report-chart {
+    height: 260px;
+  }
+}

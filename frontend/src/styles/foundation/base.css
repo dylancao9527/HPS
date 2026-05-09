@@ -1,0 +1,16 @@
+/* ==============================================================================
+   Base Reset
+   ============================================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans SC', 'Figtree', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.25s, color 0.25s;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+#root { min-height: 100vh; }

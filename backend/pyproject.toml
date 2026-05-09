@@ -1,0 +1,34 @@
+[project]
+name = "hypertension-prediction-backend"
+version = "1.0.0"
+description = "高血压风险预测系统后端 — Prophet + LightGBM 级联融合"
+requires-python = ">=3.10"
+dependencies = [
+    # Web 框架
+    "flask>=3.0",
+    "flask-cors>=4.0",
+    "flask-sqlalchemy>=3.1",
+    "flask-migrate>=4.0",
+    # 数据库
+    "pymysql>=1.1",
+    "cryptography>=45.0",
+    # 认证
+    "pyjwt>=2.8",
+    # 机器学习
+    "prophet>=1.1",
+    "lightgbm>=4.0",
+    "scikit-learn>=1.3",
+    "optuna>=3.0",
+    "optuna-integration[lightgbm]>=3.6",
+    "joblib>=1.3",
+    # 数据处理
+    "numpy>=1.24",
+    "pandas>=2.0",
+    # 工具
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]

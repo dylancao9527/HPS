@@ -1,0 +1,29 @@
+/* ==============================================================================
+   Dark Mode Input Fixes — number spinners, date pickers, select arrows
+   ============================================================================== */
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] select {
+  color-scheme: dark;
+}
+
+/* Beautified date inputs */
+input[type="date"],
+input[type="datetime-local"] {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+input[type="date"]:focus,
+input[type="datetime-local"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}

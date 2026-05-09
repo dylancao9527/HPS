@@ -1,0 +1,104 @@
+/* ==============================================================================
+   Health Task Feature
+   ============================================================================== */
+
+.health-task-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.health-task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.health-task-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 18rem;
+}
+
+.health-task-cta-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.health-task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.health-task-card {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+}
+
+.health-task-card--warning {
+  border-color: rgba(245, 158, 11, 0.24);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.health-task-card--danger {
+  border-color: rgba(239, 68, 68, 0.24);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.health-task-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.health-task-value {
+  display: block;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.health-task-copy {
+  margin-top: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.health-task-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.health-task-state--error {
+  color: var(--danger);
+}
+
+.quick-bp-modal {
+  max-width: 540px;
+}
+
+.quick-bp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quick-bp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}

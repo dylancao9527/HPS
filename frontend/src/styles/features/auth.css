@@ -1,0 +1,208 @@
+/* ==============================================================================
+   Auth Page
+   ============================================================================== */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-brand-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.auth-card {
+  width: min(100%, 430px);
+  margin: 0;
+}
+.auth-card .form-group { margin-bottom: 0.7rem; }
+
+.auth-form-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.auth-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+
+.auth-switch { text-align: center; margin-top: 0.25rem; font-size: 0.9rem; color: var(--text-secondary); }
+
+.auth-route-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.auth-route-pill {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.auth-route-pill .btn {
+  border-radius: 8px;
+  min-height: 38px;
+}
+
+.auth-reset-modal {
+  max-width: 400px;
+}
+
+.auth-debug-code {
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.auth-debug-code strong {
+  font-size: 1.05rem;
+  letter-spacing: 2px;
+}
+
+.auth-debug-code span {
+  display: inline-block;
+  font-size: 0.75rem;
+  margin-left: 0.3rem;
+}
+
+.auth-mode-switch {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+  border: 1px solid var(--card-border);
+  margin-bottom: 1rem;
+}
+
+.auth-mode-switch button {
+  min-height: 40px;
+  border-radius: var(--radius);
+}
+
+.auth-inline-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.auth-login-role-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+  border: 1px solid var(--card-border);
+}
+
+.auth-login-role-switch button {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.auth-login-role-switch .btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.auth-login-role-switch .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.auth-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.auth-input-row input {
+  flex: 1;
+}
+
+.auth-input-row .btn {
+  min-width: 108px;
+}
+
+.auth-email-code-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--success) 24%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--success) 8%, var(--card-bg));
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.auth-email-code-status strong {
+  color: var(--success);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.auth-email-code-status.is-expired {
+  border-color: color-mix(in srgb, var(--warning) 30%, var(--border));
+  background: color-mix(in srgb, var(--warning) 8%, var(--card-bg));
+}
+
+.auth-email-code-status.is-expired strong {
+  color: var(--warning);
+}
+
+.auth-theme-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 100; }
+
+@media (max-width: 768px) {
+  .auth-page {
+    padding: 1rem;
+  }
+  .auth-card { max-width: 100%; }
+  .auth-input-row {
+    flex-direction: column;
+  }
+  .auth-input-row .btn {
+    width: 100%;
+  }
+  .auth-email-code-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .auth-debug-code span {
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+}

@@ -1,0 +1,172 @@
+/* ==============================================================================
+   Prediction Feature - Base / Legacy Shared
+   ============================================================================== */
+
+.risk-overview { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+
+.risk-badge {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 3px solid;
+}
+
+.risk-badge .probability { font-size: 1.6rem; line-height: 1; }
+.risk-badge .label { font-size: 0.85rem; margin-top: 0.2rem; opacity: 0.9; }
+
+.risk-info { flex: 1; min-width: 200px; }
+.risk-kicker {
+  margin-bottom: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.risk-info h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
+.risk-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+.risk-summary-item {
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+  border: 1px solid var(--card-border);
+}
+.risk-summary-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  margin-bottom: 0.25rem;
+}
+.risk-summary-value {
+  font-size: 0.98rem;
+  color: var(--text);
+}
+.risk-info p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+
+.chart-container { width: 100%; height: 280px; }
+
+.rec-list { display: flex; flex-direction: column; gap: 0.65rem; }
+
+.prediction-guideline-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.prediction-guideline-block {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--accent-light));
+}
+
+.prediction-guideline-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.prediction-guideline-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.prediction-guideline-source {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.prediction-action-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.prediction-action-item {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.rec-item {
+  background: var(--accent-light);
+  border-radius: var(--radius);
+  padding: 0.95rem 1rem;
+  border-left: 3px solid var(--border);
+  transition: background 0.2s;
+}
+.rec-item.high { border-left-color: var(--danger); }
+.rec-item.medium { border-left-color: var(--warning); }
+.rec-item.low { border-left-color: var(--accent); }
+.rec-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.45rem;
+  flex-wrap: wrap;
+}
+.rec-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.rec-priority-badge.high {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+.rec-priority-badge.medium {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+.rec-priority-badge.low {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+.rec-item h4 { font-size: 0.95rem; margin-bottom: 0; }
+.rec-item p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+.rec-item .rec-basis { font-size: 0.78rem; color: var(--text-secondary); opacity: 0.7; margin-top: 0.3rem; font-style: italic; }
+
+.prediction-empty-state {
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--accent-light);
+  border: 1px dashed var(--border);
+  text-align: center;
+}
+
+.prediction-empty-title {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.prediction-empty-desc {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .risk-overview { flex-direction: column; text-align: center; }
+}

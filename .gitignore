@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+.pytest_cache/
+.pytest-tmp/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+backend/.env
+frontend/.env
+backend/runtime/
+
+# 前端构建产物（由 pnpm build 生成，不提交）
+backend/static/
+
+# 其他临时文件
+/tmp/*
+/output/*
+/scripts/*
+/backend/ml_models/
+/docs/model_report.md
+/datasets/training_data_export.csv
+/lunwen-doc
+
+
+.agents
+.claude

@@ -1,0 +1,31 @@
+/* ==============================================================================
+   Table
+   ============================================================================== */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.data-table th, .data-table td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table th {
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  background: color-mix(in srgb, var(--card-bg) 86%, var(--accent-light));
+}
+.text-danger { color: var(--danger); font-weight: 600; }
+
+/* ==============================================================================
+   Pagination
+   ============================================================================== */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-top: 1rem; }
+.page-info { font-size: 0.9rem; color: var(--text-secondary); }
