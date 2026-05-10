@@ -41,8 +41,7 @@ backend/static/
 /backend/ml_models/
 /docs/model_report.md
 /datasets/training_data_export.csv
-/lunwen-doc
-
+lunwen-doc
 
 .agents
 .claude

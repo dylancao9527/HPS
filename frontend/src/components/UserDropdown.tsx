@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { ChevronDown, ChevronUp, User, LogOut } from 'lucide-react'
+import { ChevronDown, ChevronUp, LogOut } from 'lucide-react'
 
 export default function UserDropdown() {
   const { user, logout } = useAuth()
@@ -23,12 +23,6 @@ export default function UserDropdown() {
   }, [])
 
   if (!user) return null
-
-  const handleProfileClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    setOpen(false)
-    navigate('/profile')
-  }
 
   const handleLogoutClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -52,9 +46,6 @@ export default function UserDropdown() {
       </button>
       {open && (
         <div className="user-dropdown-menu">
-          <button onClick={handleProfileClick}>
-            <User size={16} /> 个人中心
-          </button>
           <button onClick={handleLogoutClick}>
             <LogOut size={16} /> 退出登录
           </button>

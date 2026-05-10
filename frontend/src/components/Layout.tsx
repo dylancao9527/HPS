@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Activity, CalendarDays, ClipboardList, HeartPulse, History, Home, UserRound } from 'lucide-react'
+import { Activity, CalendarDays, ClipboardList, HeartPulse, History, Home, PanelLeftClose, PanelLeftOpen, UserRound } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import UserDropdown from '@/components/UserDropdown'
 import logoIcon from '@/assets/logo.ico'
@@ -14,30 +15,47 @@ const navItems = [
 ]
 
 export default function Layout() {
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <div className="app-layout app-shell">
-      <aside className="app-sidebar" aria-label="主导航">
+    <div className={`app-layout app-shell${collapsed ? ' sidebar-collapsed' : ''}`}>
+      <aside className={`app-sidebar${collapsed ? ' collapsed' : ''}`} aria-label="主导航">
         <div className="nav-brand app-sidebar-brand">
           <img src={logoIcon} alt="" className="nav-brand-mark" />
-          <div className="nav-brand-copy">
-            <span className="nav-brand-title">高血压风险预测系统</span>
-            <span className="nav-brand-subtitle">健康管理工作台</span>
-          </div>
+          {!collapsed && (
+            <div className="nav-brand-copy">
+              <span className="nav-brand-title">高血压风险预测系统</span>
+              <span className="nav-brand-subtitle">健康管理工作台</span>
+            </div>
+          )}
         </div>
 
-        <nav className="nav-links app-sidebar-nav">
+        <nav className="nav-links app-sidebar-nav" id="app-sidebar-nav">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end}>
               <Icon size={18} />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
 
-        <div className="app-sidebar-note">
-          <ClipboardList size={16} />
-          <span>仅供健康管理参考</span>
-        </div>
+        <button
+          className="sidebar-toggle"
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-expanded={!collapsed}
+          aria-controls="app-sidebar-nav"
+        >
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {!collapsed && <span>收起侧栏</span>}
+        </button>
+
+        {!collapsed && (
+          <div className="app-sidebar-note">
+            <ClipboardList size={16} />
+            <span>仅供健康管理参考</span>
+          </div>
+        )}
       </aside>
 
       <div className="app-shell-main">
