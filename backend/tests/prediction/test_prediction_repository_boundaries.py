@@ -11,7 +11,11 @@ from prediction.infrastructure.prediction_governance_read_model import (
     PredictionGovernanceReadModel,
 )
 from prediction.infrastructure.prediction_record_repository import PredictionRecordRepository
+from prediction.infrastructure.prophet_model_repository import (
+    build_user_prophet_model_lock_statement,
+)
 from prediction.infrastructure.repositories import PredictionRepository
+from prediction.schemas.commands import GetPredictionHistoryQuery
 
 
 def test_high_risk_normalization_matches_current_values():
@@ -194,6 +198,35 @@ def test_governance_query_normalizes_pagination_and_filters():
     assert query.has_anomaly is False
     assert query.anomaly_type == "insufficient_data_prediction"
     assert query.needs_anomaly_projection_filter is True
+
+
+def test_prediction_history_query_clamps_large_page_size():
+    query = GetPredictionHistoryQuery(user_id=42, page=0, per_page=9999)
+
+    assert query.page == 1
+    assert query.per_page == 100
+
+
+def test_governance_query_clamps_large_page_size():
+    query = GovernanceQuery.from_filters(page=1, per_page=9999)
+
+    assert query.per_page == 100
+
+
+def test_prophet_model_save_uses_user_row_for_update_lock():
+    from sqlalchemy.dialects import mysql
+
+    statement = build_user_prophet_model_lock_statement(42)
+    compiled = str(
+        statement.compile(
+            dialect=mysql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
+    )
+
+    assert "FROM users" in compiled
+    assert "users.id = 42" in compiled
+    assert compiled.rstrip().endswith("FOR UPDATE")
 
 
 def test_governance_prediction_detail_exposes_forecast_summary():

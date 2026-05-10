@@ -29,12 +29,25 @@ def is_legacy_prophet_storage_key(storage_key: str) -> bool:
 class LocalProphetModelStore:
     def __init__(self, root):
         self.root = Path(root)
+        self._resolved_root = self.root.resolve()
 
     def build_storage_key(self, *, user_id, model_version, data_signature):
         return f"user_{user_id}/{model_version}/{data_signature}"
 
     def _bundle_dir(self, storage_key: str) -> Path:
-        return self.root / storage_key
+        raw_key = str(storage_key or "").strip()
+        parts = raw_key.replace("\\", "/").split("/")
+        if (
+            not raw_key
+            or Path(raw_key).is_absolute()
+            or any(part in {"", ".", ".."} or ":" in part for part in parts)
+        ):
+            raise ValueError("Invalid Prophet storage key")
+
+        bundle_dir = (self._resolved_root / Path(*parts)).resolve()
+        if not bundle_dir.is_relative_to(self._resolved_root):
+            raise ValueError("Invalid Prophet storage key")
+        return bundle_dir
 
     def write_bundle(self, storage_key: str, sys_model_blob: bytes, dia_model_blob: bytes) -> StoredProphetBundle:
         bundle_dir = self._bundle_dir(storage_key)

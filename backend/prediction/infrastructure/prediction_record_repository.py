@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 
 from extensions import db
 from models import PredictionRecord
+from prediction.domain.pagination_policy import (
+    DEFAULT_HISTORY_PAGE_SIZE,
+    normalize_page,
+    normalize_per_page,
+)
 from prediction.infrastructure.compact_prediction_mapper import (
     CompactPredictionMapper,
 )
@@ -15,6 +20,11 @@ class PredictionRecordRepository:
     def get_prediction_history(
         self, *, user_id, page, per_page, start_date="", end_date=""
     ):
+        page = normalize_page(page)
+        per_page = normalize_per_page(
+            per_page,
+            default=DEFAULT_HISTORY_PAGE_SIZE,
+        )
         query = (
             PredictionRecord.query.filter_by(user_id=user_id)
             .order_by(PredictionRecord.created_at.desc())

@@ -1,9 +1,15 @@
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from extensions import db
 from utils.time_utils import utc_now_naive
 
-from models import UserProphetModel
+from models import User, UserProphetModel
+
+
+def build_user_prophet_model_lock_statement(user_id):
+    return select(User.id).where(User.id == user_id).with_for_update()
 
 
 class ProphetModelRepository:
@@ -18,6 +24,10 @@ class ProphetModelRepository:
         )
 
     def save_user_prophet_model(self, payload):
+        db.session.execute(
+            build_user_prophet_model_lock_statement(payload["user_id"])
+        ).scalar_one()
+
         UserProphetModel.query.filter_by(
             user_id=payload["user_id"],
             is_active=True,

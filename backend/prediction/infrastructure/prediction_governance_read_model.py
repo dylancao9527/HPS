@@ -11,6 +11,11 @@ from prediction.domain.governance_policy import (
     build_governance_summary,
     is_high_risk,
 )
+from prediction.domain.pagination_policy import (
+    DEFAULT_GOVERNANCE_PAGE_SIZE,
+    normalize_page,
+    normalize_per_page,
+)
 from prediction.domain.trend_policy import summarize_forecast_trend
 
 
@@ -44,8 +49,11 @@ class GovernanceQuery:
         anomaly_type="",
     ):
         return cls(
-            page=page if page > 0 else 1,
-            per_page=per_page if per_page > 0 else 20,
+            page=normalize_page(page),
+            per_page=normalize_per_page(
+                per_page,
+                default=DEFAULT_GOVERNANCE_PAGE_SIZE,
+            ),
             risk_level=(risk_level or "").strip(),
             confidence_level=(confidence_level or "").strip(),
             has_anomaly=has_anomaly,

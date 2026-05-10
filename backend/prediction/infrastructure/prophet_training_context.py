@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 from prediction.domain.bp_data_policy import MINIMUM_BP_NATURAL_DAYS_FOR_PREDICTION
+from prediction.domain.run_key_policy import AGGREGATION_MODE
 
-AGGREGATION_MODE = "daily_mean"
 MINIMUM_TRAIN_DAYS = MINIMUM_BP_NATURAL_DAYS_FOR_PREDICTION
 SHORT_HISTORY_DAYS = 7
 HIGH_CONFIDENCE_DAYS = 28

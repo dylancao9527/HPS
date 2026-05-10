@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 
 from prediction.domain.forecast_period_policy import require_supported_forecast_days
+from prediction.domain.pagination_policy import (
+    DEFAULT_HISTORY_PAGE_SIZE,
+    normalize_page,
+    normalize_per_page,
+)
 
 
 @dataclass
@@ -20,6 +25,13 @@ class GetPredictionHistoryQuery:
     per_page: int = 10
     start_date: str = ""
     end_date: str = ""
+
+    def __post_init__(self):
+        self.page = normalize_page(self.page)
+        self.per_page = normalize_per_page(
+            self.per_page,
+            default=DEFAULT_HISTORY_PAGE_SIZE,
+        )
 
 
 @dataclass

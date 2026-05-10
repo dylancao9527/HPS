@@ -5,9 +5,11 @@ from prediction.application.prediction_result_builder import (
 )
 from prediction.domain.bp_data_policy import require_minimum_bp_days_for_prediction
 from prediction.domain.guideline_signal_policy import build_guideline_signal
-from prediction.domain.run_key_policy import build_prediction_run_key
+from prediction.domain.run_key_policy import (
+    AGGREGATION_MODE,
+    build_prediction_run_key,
+)
 from prediction.domain.trend_policy import fuse_risk_with_trend
-from prediction.infrastructure.prophet_gateway import AGGREGATION_MODE
 from prediction.schemas.input_snapshot import PredictionInputSnapshot
 
 

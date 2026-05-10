@@ -3,6 +3,7 @@ from datetime import date
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 from flask import Flask
 
 from bp_series.domain import DailyBPSeriesPoint
@@ -56,6 +57,40 @@ def test_prophet_model_store_uses_fixed_7_day_free_storage_keys(tmp_path):
     assert store.list_legacy_storage_keys() == [
         "user_42/fd_7/user-prophet-v1/legacy-signature",
     ]
+
+
+@pytest.mark.parametrize(
+    "storage_key",
+    [
+        "",
+        "../outside",
+        "user_42/../../outside",
+        "/tmp/outside",
+        "C:/tmp/outside",
+    ],
+)
+def test_prophet_model_store_rejects_storage_keys_outside_root(
+    tmp_path,
+    storage_key,
+):
+    store = LocalProphetModelStore(tmp_path)
+
+    with pytest.raises(ValueError, match="Invalid Prophet storage key"):
+        store.write_bundle(storage_key, b"sys", b"dia")
+
+
+def test_prophet_model_store_delete_rejects_traversal_without_touching_outside(
+    tmp_path,
+):
+    outside = tmp_path.parent / f"outside-{tmp_path.name}"
+    outside.mkdir()
+    (outside / "marker.txt").write_text("keep", encoding="utf-8")
+    store = LocalProphetModelStore(tmp_path)
+
+    with pytest.raises(ValueError, match="Invalid Prophet storage key"):
+        store.delete_bundle("../outside")
+
+    assert (outside / "marker.txt").read_text(encoding="utf-8") == "keep"
 
 
 def test_load_models_from_active_asset_rejects_legacy_fd_storage_key(monkeypatch):

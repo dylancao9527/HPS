@@ -1,6 +1,8 @@
 from datetime import datetime
+import inspect
 from types import SimpleNamespace
 
+from prediction.application import prediction_run
 from prediction.application.prediction_result_builder import (
     build_prediction_result,
     build_prediction_run_mode,
@@ -12,6 +14,13 @@ from prediction.domain.guideline_signal_policy import (
     derive_guideline_trend_direction,
 )
 from prediction.schemas.commands import PredictCommand
+
+
+def test_prediction_run_uses_domain_aggregation_policy():
+    source = inspect.getsource(prediction_run)
+
+    assert "prediction.infrastructure.prophet_gateway import AGGREGATION_MODE" not in source
+    assert "from prediction.domain.run_key_policy import (" in source
 
 
 def test_guideline_signal_policy_derives_bp_grade_and_trend_direction():

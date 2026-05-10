@@ -4,6 +4,7 @@ from typing import Any
 from flask import current_app
 
 from bp_series.repository import DailyBPSeriesRepository
+from prediction.domain.run_key_policy import AGGREGATION_MODE
 from prediction.infrastructure.prophet_model_lifecycle import ProphetModelLifecycle
 from prediction.infrastructure.prophet_model_cache import InMemoryProphetModelCache
 from prediction.infrastructure.prophet_model_store import (
@@ -19,7 +20,6 @@ from prediction.infrastructure.prophet_trainer import (
     predict_from_models as _predict_from_models,
 )
 from prediction.infrastructure.prophet_training_context import (
-    AGGREGATION_MODE,
     MINIMUM_TRAIN_DAYS,
     build_daily_training_frame_from_series,
     build_training_context,

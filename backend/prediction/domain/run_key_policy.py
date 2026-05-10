@@ -2,6 +2,8 @@ import hashlib
 import json
 
 
+AGGREGATION_MODE = "daily_mean"
+
 RISK_INPUT_KEY_FIELDS = (
     "age",
     "male",
