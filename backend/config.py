@@ -34,8 +34,9 @@ class Config:
     EXPORT_RECENT_BP_COUNT = int(os.getenv("EXPORT_RECENT_BP_COUNT", "5"))
 
     ENABLE_LOCAL_MOCK_EMAIL_SERVICE = (
-        os.getenv("ENABLE_LOCAL_MOCK_EMAIL_SERVICE", "1") == "1"
+        os.getenv("ENABLE_LOCAL_MOCK_EMAIL_SERVICE", "0") == "1"
     )
+    LOCAL_MOCK_EMAIL_ACCESS_TOKEN = os.getenv("LOCAL_MOCK_EMAIL_ACCESS_TOKEN", "")
     LOCAL_MOCK_EMAIL_STORE = os.getenv(
         "LOCAL_MOCK_EMAIL_STORE",
         str(BASE_DIR / "runtime" / "mock_emails.json"),

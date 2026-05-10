@@ -1,5 +1,6 @@
 from extensions import db
 from models import AdminUser, BPRecord, PredictionRecord, User
+from prediction.domain.pagination_policy import normalize_page, normalize_per_page
 from services.account_contract import validate_password_strength
 from services.export_service import get_training_export_stats
 from utils.time_utils import utc_now_naive
@@ -7,6 +8,8 @@ from utils.time_utils import utc_now_naive
 
 class AdminUserService:
     def list_users(self, page, per_page):
+        page = normalize_page(page)
+        per_page = normalize_per_page(per_page, default=20)
         pagination = User.query.order_by(User.created_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
         )

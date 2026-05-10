@@ -146,6 +146,24 @@ def test_get_records_returns_paginated_records(monkeypatch, fake_user):
     }
 
 
+def test_get_records_normalizes_page_size(monkeypatch, fake_user):
+    app = _app()
+    monkeypatch.setattr(bp_record_service, "BPRecord", FakeBPRecord)
+    pagination = SimpleNamespace(items=[], total=0, pages=0)
+    fake_user.bp_records = FakeRecordsRelationship(pagination)
+
+    with app.test_request_context("/api/bp-records?page=0&per_page=9999"):
+        payload, status = _json_and_status(bp_records.get_records.__wrapped__(fake_user))
+
+    assert status == 200
+    assert payload["page"] == 1
+    assert fake_user.bp_records.paginate_kwargs == {
+        "page": 1,
+        "per_page": 100,
+        "error_out": False,
+    }
+
+
 def test_add_record_success_commits_and_returns_record(monkeypatch, fake_user):
     app = _app()
     fake_session = FakeSession()
@@ -214,6 +232,28 @@ def test_add_record_rejects_systolic_not_above_diastolic(fake_user):
 
     assert status == 400
     assert payload == {"error": "收缩压应高于舒张压"}
+
+
+def test_add_record_rejects_invalid_recorded_at(monkeypatch, fake_user):
+    app = _app()
+    fake_session = FakeSession()
+    monkeypatch.setattr(bp_record_service, "BPRecord", FakeBPRecord)
+    monkeypatch.setattr(bp_record_service.db, "session", fake_session, raising=False)
+
+    with app.test_request_context(
+        "/api/bp-records",
+        json={
+            "systolic_bp": 128,
+            "diastolic_bp": 82,
+            "recorded_at": "not-a-date",
+        },
+    ):
+        payload, status = _json_and_status(bp_records.add_record.__wrapped__(fake_user))
+
+    assert status == 400
+    assert payload == {"error": "recorded_at 格式不正确"}
+    assert fake_session.added == []
+    assert fake_session.commits == 0
 
 
 def test_delete_record_missing_returns_404(monkeypatch, fake_user):

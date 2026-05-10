@@ -170,6 +170,26 @@ def test_email_code_verify_missing_and_expired(monkeypatch):
     assert "expired" not in auth._reset_codes
 
 
+def test_email_code_verify_removes_code_after_too_many_failures():
+    code_store = {}
+    service = auth_service.EmailCodeService(
+        code_store=code_store,
+        code_ttl_seconds=300,
+        max_verify_attempts=2,
+        random_int=lambda start, end: 123456,
+        time_provider=lambda: 1000,
+    )
+    service.generate_code("reset:alice@example.com")
+
+    assert service.verify_code("reset:alice@example.com", "000000") == "验证码错误"
+    assert code_store["reset:alice@example.com"]["failed_attempts"] == 1
+    assert (
+        service.verify_code("reset:alice@example.com", "111111")
+        == "验证码错误次数过多，请重新获取"
+    )
+    assert "reset:alice@example.com" not in code_store
+
+
 def test_send_register_code_validates_email(monkeypatch):
     app = _app()
     _install_user_query(monkeypatch, FakeUserQuery())

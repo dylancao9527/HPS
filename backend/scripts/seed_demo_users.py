@@ -1,3 +1,6 @@
+import argparse
+import os
+import secrets
 from datetime import timedelta
 from pathlib import Path
 import sys
@@ -12,7 +15,6 @@ from models import BPRecord, User, UserProfile, UserRiskFactorProfile
 from utils.time_utils import utc_now_naive
 
 
-DEMO_PASSWORD = "Demo@123456"
 DEMO_USER_PREFIX = "demo_showcase_"
 LEGACY_DEMO_PREFIXES = ("demo_compare_", DEMO_USER_PREFIX)
 
@@ -186,11 +188,11 @@ def _diagnosis_label(value):
     return value or "不确定"
 
 
-def _create_demo_user(spec, now):
+def _create_demo_user(spec, now, password):
     user = User()
     user.username = spec["username"]
     user.email = spec["email"]
-    user.set_password(DEMO_PASSWORD)
+    user.set_password(password)
     db.session.add(user)
     db.session.flush()
 
@@ -233,7 +235,7 @@ def _create_demo_user(spec, now):
     }
 
 
-def seed_demo_users(*, reset_existing=False):
+def seed_demo_users(*, reset_existing=False, password):
     existing = User.query.filter(_demo_user_filter()).all()
     deleted_existing = len(existing) if reset_existing else 0
     if reset_existing and existing:
@@ -262,7 +264,7 @@ def seed_demo_users(*, reset_existing=False):
     now = utc_now_naive()
     created = []
     for spec in DEMO_USERS:
-        created.append(_create_demo_user(spec, now))
+        created.append(_create_demo_user(spec, now, password))
     db.session.commit()
     return {
         "deleted_existing": deleted_existing,
@@ -271,15 +273,58 @@ def seed_demo_users(*, reset_existing=False):
     }
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="生成本地演示用户和血压样本")
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="实际写入数据库；不传时只输出预览提示",
+    )
+    parser.add_argument(
+        "--reset-existing",
+        action="store_true",
+        help="删除已有 demo_showcase_/demo_compare_ 前缀用户后重新生成",
+    )
+    parser.add_argument(
+        "--yes-i-understand",
+        action="store_true",
+        help="确认允许执行删除已有 demo 用户的操作",
+    )
+    parser.add_argument(
+        "--password",
+        default=os.getenv("DEMO_USER_PASSWORD"),
+        help="显式指定本次生成的 demo 用户密码；也可使用 DEMO_USER_PASSWORD",
+    )
+    args = parser.parse_args(argv)
+    if args.reset_existing and not args.yes_i_understand:
+        raise SystemExit("--reset-existing must also pass --yes-i-understand")
+    return args
+
+
+def _generate_demo_password():
+    return f"{secrets.token_urlsafe(12)}A1!"
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    if not args.apply:
+        print("预览模式：不会连接应用或写入数据库。添加 --apply 才会生成 demo 用户。")
+        if args.reset_existing:
+            print("预览模式：执行时会删除已有 demo_showcase_/demo_compare_ 前缀用户。")
+        return
+
+    password = args.password or _generate_demo_password()
     app = create_app({"INIT_ADMIN_ON_STARTUP": False})
     with app.app_context():
-        result = seed_demo_users(reset_existing=True)
+        result = seed_demo_users(
+            reset_existing=args.reset_existing,
+            password=password,
+        )
 
     print("展示用户生成完成：")
     print(f"  删除旧 demo 用户数: {result['deleted_existing']}")
     print(f"  新增 demo 用户数: {result['created_count']}")
-    print(f"  统一密码: {DEMO_PASSWORD}")
+    print(f"  本次 demo 用户密码: {password}")
     for item in result["users"]:
         print(
             f"  - {item['username']} ({item['label']}) "

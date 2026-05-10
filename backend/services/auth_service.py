@@ -1,5 +1,5 @@
 import math
-import random
+import secrets
 import time
 
 from flask import current_app
@@ -11,6 +11,10 @@ from services.account_contract import validate_email_format, validate_password_s
 from services.mock_email_service import store_email
 
 
+def _secure_random_int(start, end):
+    return start + secrets.randbelow(end - start + 1)
+
+
 class EmailCodeService:
     def __init__(
         self,
@@ -18,13 +22,15 @@ class EmailCodeService:
         code_store=None,
         code_ttl_seconds=300,
         resend_cooldown_seconds=60,
-        random_int=random.randint,
+        max_verify_attempts=5,
+        random_int=None,
         time_provider=time.time,
     ):
         self.code_store = code_store if code_store is not None else {}
         self.code_ttl_seconds = code_ttl_seconds
         self.resend_cooldown_seconds = resend_cooldown_seconds
-        self.random_int = random_int
+        self.max_verify_attempts = max_verify_attempts
+        self.random_int = random_int or _secure_random_int
         self.time_provider = time_provider
 
     def generate_code(self, cache_key):
@@ -34,6 +40,7 @@ class EmailCodeService:
             "code": code,
             "expires": now + self.code_ttl_seconds,
             "sent_at": now,
+            "failed_attempts": 0,
         }
         return code
 
@@ -71,6 +78,11 @@ class EmailCodeService:
             del self.code_store[cache_key]
             return "验证码已过期，请重新获取"
         if cached["code"] != code:
+            failed_attempts = int(cached.get("failed_attempts", 0)) + 1
+            if failed_attempts >= self.max_verify_attempts:
+                del self.code_store[cache_key]
+                return "验证码错误次数过多，请重新获取"
+            cached["failed_attempts"] = failed_attempts
             return "验证码错误"
         return None
 
@@ -116,7 +128,7 @@ class EmailCodeService:
         }
 
 
-class AuthAccountService:
+class RegistrationService:
     def __init__(self, *, email_code_service, token_generator):
         self.email_code_service = email_code_service
         self.token_generator = token_generator
@@ -189,6 +201,11 @@ class AuthAccountService:
             201,
         )
 
+
+class LoginService:
+    def __init__(self, *, token_generator):
+        self.token_generator = token_generator
+
     def login(self, data, *, required_role=None):
         login_id = data.get("username", "").strip()
         password = data.get("password", "")
@@ -233,6 +250,11 @@ class AuthAccountService:
         return AdminUser.query.filter(
             or_(AdminUser.username == login_id, AdminUser.email == login_id)
         ).first()
+
+
+class AccountMaintenanceService:
+    def __init__(self, *, email_code_service):
+        self.email_code_service = email_code_service
 
     def change_password(self, current_user, data):
         old_password = data.get("old_password", "")
@@ -320,6 +342,11 @@ class AuthAccountService:
         db.session.commit()
         return {"message": "账号信息已更新", "user": current_user.to_dict()}
 
+
+class PasswordResetService:
+    def __init__(self, *, email_code_service):
+        self.email_code_service = email_code_service
+
     def forgot_password(self, data):
         email = data.get("email", "").strip()
 
@@ -369,3 +396,45 @@ class AuthAccountService:
 
         self.email_code_service.remove_code(email)
         return {"message": "密码重置成功，请使用新密码登录"}
+
+
+class AuthAccountService:
+    def __init__(self, *, email_code_service, token_generator):
+        self.registration_service = RegistrationService(
+            email_code_service=email_code_service,
+            token_generator=token_generator,
+        )
+        self.login_service = LoginService(token_generator=token_generator)
+        self.account_maintenance_service = AccountMaintenanceService(
+            email_code_service=email_code_service,
+        )
+        self.password_reset_service = PasswordResetService(
+            email_code_service=email_code_service,
+        )
+
+    def send_register_code(self, data):
+        return self.registration_service.send_register_code(data)
+
+    def register(self, data):
+        return self.registration_service.register(data)
+
+    def login(self, data, *, required_role=None):
+        return self.login_service.login(data, required_role=required_role)
+
+    def change_password(self, current_user, data):
+        return self.account_maintenance_service.change_password(current_user, data)
+
+    def send_change_email_code(self, current_user, data):
+        return self.account_maintenance_service.send_change_email_code(
+            current_user,
+            data,
+        )
+
+    def update_account(self, current_user, data):
+        return self.account_maintenance_service.update_account(current_user, data)
+
+    def forgot_password(self, data):
+        return self.password_reset_service.forgot_password(data)
+
+    def reset_password(self, data):
+        return self.password_reset_service.reset_password(data)

@@ -9,6 +9,7 @@ import datetime
 
 from extensions import db
 from models import BPRecord
+from prediction.domain.pagination_policy import normalize_page, normalize_per_page
 from utils.time_utils import ensure_utc_naive, utc_now_naive
 
 
@@ -32,6 +33,8 @@ def _parse_optional_float(value, field_name):
 
 class BPRecordService:
     def list_records(self, user, page, per_page):
+        page = normalize_page(page)
+        per_page = normalize_per_page(per_page, default=20)
         pagination = user.bp_records.order_by(BPRecord.recorded_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
         )
@@ -59,7 +62,10 @@ class BPRecordService:
         if validation_error:
             return {"error": validation_error}, 400
 
-        recorded_at = self._parse_recorded_at(data.get("recorded_at"))
+        try:
+            recorded_at = self._parse_recorded_at(data.get("recorded_at"))
+        except ValueError as exc:
+            return {"error": str(exc)}, 400
 
         record = BPRecord(
             user_id=user.id,
@@ -94,14 +100,15 @@ class BPRecordService:
         return {"message": f"已删除 {deleted} 条记录"}
 
     def _parse_recorded_at(self, recorded_at_str):
+        if recorded_at_str is None:
+            return ensure_utc_naive(utc_now_naive())
+        if isinstance(recorded_at_str, datetime.datetime):
+            return ensure_utc_naive(recorded_at_str)
+
         try:
-            recorded_at = (
-                datetime.datetime.fromisoformat(recorded_at_str)
-                if recorded_at_str
-                else utc_now_naive()
-            )
-        except ValueError:
-            recorded_at = utc_now_naive()
+            recorded_at = datetime.datetime.fromisoformat(recorded_at_str)
+        except (TypeError, ValueError):
+            raise ValueError("recorded_at 格式不正确")
 
         return ensure_utc_naive(recorded_at)
 

@@ -188,6 +188,27 @@ def test_get_users_returns_paginated_users(monkeypatch):
     }
 
 
+def test_get_users_normalizes_page_size(monkeypatch):
+    app = _app()
+    FakeUserModel.query = FakeListQuery()
+    FakeAdminUserModel.query = FakeListQuery()
+    monkeypatch.setattr(admin_service, "User", FakeUserModel)
+    monkeypatch.setattr(admin_service, "AdminUser", FakeAdminUserModel)
+
+    with app.test_request_context("/api/admin/users?page=-1&per_page=9999"):
+        payload, status = _json_and_status(
+            admin.get_users.__wrapped__(FakeAdminUser(99, "admin"))
+        )
+
+    assert status == 200
+    assert payload["page"] == 1
+    assert FakeUserModel.query.paginate_kwargs == {
+        "page": 1,
+        "per_page": 100,
+        "error_out": False,
+    }
+
+
 def test_update_user_only_allows_password_change(monkeypatch):
     app = _app()
     target = FakeUser(7, "target", "target@example.com")

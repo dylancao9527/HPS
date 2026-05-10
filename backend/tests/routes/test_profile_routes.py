@@ -242,3 +242,27 @@ def test_prediction_trend_route_returns_lightweight_projection(monkeypatch):
         ]
     }
     assert calls == [(42, 5)]
+
+
+def test_prediction_trend_route_normalizes_limit(monkeypatch):
+    app = _app()
+    user = FakeUser(FakeProfile(user_id=42))
+    calls = []
+
+    class FakePredictionTrendUseCase:
+        def execute(self, *, user_id, limit):
+            calls.append((user_id, limit))
+            return {"records": []}
+
+    monkeypatch.setattr(
+        profile,
+        "build_prediction_trend_use_case",
+        lambda: FakePredictionTrendUseCase(),
+        raising=False,
+    )
+
+    with app.test_request_context("/api/profile/prediction-trend?limit=9999"):
+        response = profile.get_prediction_trend.__wrapped__(user)
+
+    assert response.get_json() == {"records": []}
+    assert calls == [(42, 100)]

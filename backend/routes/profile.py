@@ -14,6 +14,7 @@
 
 from flask import Blueprint, request, jsonify
 from prediction.application.composition import PredictionUseCaseFactory
+from prediction.domain.pagination_policy import normalize_per_page
 from routes.auth import token_required
 from services.profile_service import ProfileService
 from services.weekly_report_service import WeeklyReportService
@@ -48,7 +49,7 @@ def get_profile(current_user):
 @profile_bp.route("/prediction-trend", methods=["GET"])
 @token_required
 def get_prediction_trend(current_user):
-    limit = request.args.get("limit", 20, type=int)
+    limit = normalize_per_page(request.args.get("limit", 20, type=int), default=20)
     return jsonify(
         build_prediction_trend_use_case().execute(
             user_id=current_user.id,
