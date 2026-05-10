@@ -64,26 +64,14 @@ class PredictionRepository:
     def get_latest_bp_record(self, user_id):
         return self.bp_data.get_latest_bp_record(user_id)
 
-    def get_active_prophet_model(self, user_id, forecast_days):
-        return self.prophet_models.get_active_prophet_model(user_id, forecast_days)
+    def get_active_prophet_model(self, user_id):
+        return self.prophet_models.get_active_prophet_model(user_id)
 
     def save_user_prophet_model(self, payload):
         return self.prophet_models.save_user_prophet_model(payload)
 
-    def list_prophet_models_with_legacy_blobs(self, *, limit: int):
-        return self.prophet_models.list_prophet_models_with_legacy_blobs(limit=limit)
-
-    def update_prophet_storage_key(self, *, row_id: int, storage_key: str):
-        return self.prophet_models.update_prophet_storage_key(
-            row_id=row_id,
-            storage_key=storage_key,
-        )
-
     def list_prophet_storage_keys(self) -> list[str]:
         return self.prophet_models.list_prophet_storage_keys()
-
-    def commit(self):
-        return self.prophet_models.commit()
 
     def prune_inactive_prophet_models(
         self, *, keep_inactive_per_slot: int, max_inactive_age_hours: int

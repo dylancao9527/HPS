@@ -21,6 +21,11 @@ class StoredProphetBundle:
     dia_model_blob: bytes
 
 
+def is_legacy_prophet_storage_key(storage_key: str) -> bool:
+    parts = str(storage_key or "").replace("\\", "/").split("/")
+    return len(parts) >= 2 and parts[1].startswith("fd_")
+
+
 class LocalProphetModelStore:
     def __init__(self, root):
         self.root = Path(root)
@@ -70,9 +75,13 @@ class LocalProphetModelStore:
             parts = relative.parts
             if len(parts) == 3 and not parts[1].startswith("fd_"):
                 keys.add(str(relative).replace("\\", "/"))
-        for path in self.root.glob("user_*/fd_*/*/*"):
-            if path.is_dir():
-                keys.add(str(path.relative_to(self.root)).replace("\\", "/"))
+        return sorted(keys)
+
+    def list_legacy_storage_keys(self) -> list[str]:
+        if not self.root.exists():
+            return []
         return sorted(
-            keys
+            str(path.relative_to(self.root)).replace("\\", "/")
+            for path in self.root.glob("user_*/fd_*/*/*")
+            if path.is_dir()
         )

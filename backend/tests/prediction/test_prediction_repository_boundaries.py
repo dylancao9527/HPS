@@ -423,13 +423,10 @@ def test_get_latest_bp_record_delegates_to_bp_data():
 def test_get_active_prophet_model_delegates_to_prophet_models():
     prophet_models = RecordingComponent(get_active_prophet_model_result="active-model")
 
-    result = PredictionRepository(prophet_models=prophet_models).get_active_prophet_model(
-        42,
-        7,
-    )
+    result = PredictionRepository(prophet_models=prophet_models).get_active_prophet_model(42)
 
     assert result == "active-model"
-    assert prophet_models.calls == [("get_active_prophet_model", (42, 7), {})]
+    assert prophet_models.calls == [("get_active_prophet_model", (42,), {})]
 
 
 def test_prediction_repository_does_not_expose_reusable_prediction_lookup():

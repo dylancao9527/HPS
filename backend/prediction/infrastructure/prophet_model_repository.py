@@ -1,14 +1,13 @@
 from datetime import timedelta
 
 from extensions import db
-from sqlalchemy import inspect, text
 from utils.time_utils import utc_now_naive
 
 from models import UserProphetModel
 
 
 class ProphetModelRepository:
-    def get_active_prophet_model(self, user_id, forecast_days=None):
+    def get_active_prophet_model(self, user_id):
         return (
             UserProphetModel.query.filter_by(
                 user_id=user_id,
@@ -28,15 +27,8 @@ class ProphetModelRepository:
             user_id=payload["user_id"],
             model_version=payload["model_version"],
             data_signature=payload["data_signature"],
-            aggregation_mode=payload["aggregation_mode"],
             trained_at=payload["trained_at"],
             trained_until=payload["trained_until"],
-            data_days_used=payload["data_days_used"],
-            total_history_days=payload["total_history_days"],
-            history_window_capped=payload["history_window_capped"],
-            parameter_profile=payload["parameter_profile"],
-            weekly_enabled=payload["weekly_enabled"],
-            monthly_enabled=payload["monthly_enabled"],
             storage_key=payload["storage_key"],
             is_active=True,
         )
@@ -44,50 +36,11 @@ class ProphetModelRepository:
         db.session.commit()
         return row
 
-    def list_prophet_models_with_legacy_blobs(self, *, limit: int):
-        columns = {
-            column["name"]
-            for column in inspect(db.engine).get_columns("user_prophet_models")
-        }
-        if "sys_model_blob" not in columns or "dia_model_blob" not in columns:
-            return []
-        return db.session.execute(
-            text(
-                """
-                SELECT
-                    id,
-                    user_id,
-                    model_version,
-                    data_signature,
-                    sys_model_blob,
-                    dia_model_blob
-                FROM user_prophet_models
-                WHERE storage_key IS NULL
-                  AND sys_model_blob IS NOT NULL
-                  AND dia_model_blob IS NOT NULL
-                ORDER BY id ASC
-                LIMIT :limit
-                """
-            ),
-            {"limit": limit},
-        ).mappings().all()
-
-    def update_prophet_storage_key(self, *, row_id: int, storage_key: str):
-        db.session.execute(
-            text(
-                "UPDATE user_prophet_models SET storage_key = :storage_key WHERE id = :row_id"
-            ),
-            {"storage_key": storage_key, "row_id": row_id},
-        )
-
     def list_prophet_storage_keys(self) -> list[str]:
         rows = UserProphetModel.query.filter(
             UserProphetModel.storage_key.isnot(None)
         ).all()
         return [row.storage_key for row in rows if row.storage_key]
-
-    def commit(self):
-        db.session.commit()
 
     def prune_inactive_prophet_models(
         self, *, keep_inactive_per_slot: int, max_inactive_age_hours: int

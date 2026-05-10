@@ -10,10 +10,12 @@ from prediction.infrastructure.prophet_model_store import (
     LocalProphetModelStore,
     serialize_prophet_model,
     deserialize_prophet_model,
+    is_legacy_prophet_storage_key,
 )
 from prediction.infrastructure.prophet_lifecycle_policy import should_reuse_prophet_model
 from prediction.infrastructure.prophet_trainer import (
     build_prophet_model as _build_prophet_model,
+    build_prophet_seasonality,
     predict_from_models as _predict_from_models,
 )
 from prediction.infrastructure.prophet_training_context import (
@@ -60,8 +62,8 @@ def clear_prophet_model_cache():
     _PROPHET_MODEL_CACHE = None
 
 
-def _build_model_cache_key(user_id, forecast_days, data_signature):
-    return (user_id, forecast_days, PROPHET_MODEL_VERSION, data_signature)
+def _build_model_cache_key(user_id, data_signature):
+    return (user_id, PROPHET_MODEL_VERSION, data_signature)
 
 
 def _load_daily_records(user_id, *, max_train_days=None, daily_series_repository=None):
@@ -105,14 +107,16 @@ def _build_training_meta(context, seasonality):
     }
 
 
-def _load_models_from_active_asset(active_model, cache_key):
+def _load_models_from_active_asset(active_model, cache_key, seasonality):
     if not active_model:
         return None
     if active_model.model_version != PROPHET_MODEL_VERSION:
         return None
-    if active_model.data_signature != cache_key[3]:
+    if active_model.data_signature != cache_key[-1]:
         return None
     if not active_model.storage_key:
+        return None
+    if is_legacy_prophet_storage_key(active_model.storage_key):
         return None
 
     cache = _get_model_cache()
@@ -128,16 +132,13 @@ def _load_models_from_active_asset(active_model, cache_key):
     loaded = {
         "sys_model": deserialize_prophet_model(bundle.sys_model_blob),
         "dia_model": deserialize_prophet_model(bundle.dia_model_blob),
-        "seasonality": {
-            "weekly_enabled": active_model.weekly_enabled,
-            "monthly_enabled": active_model.monthly_enabled,
-        },
+        "seasonality": seasonality,
     }
     cache.set(cache_key, loaded)
     return loaded
 
 
-def _persist_user_model(repository, user_id, forecast_days, context, seasonality, sys_model, dia_model):
+def _persist_user_model(repository, user_id, context, sys_model, dia_model):
     store = _get_model_store()
     storage_key = store.build_storage_key(
         user_id=user_id,
@@ -152,15 +153,8 @@ def _persist_user_model(repository, user_id, forecast_days, context, seasonality
             "user_id": user_id,
             "model_version": PROPHET_MODEL_VERSION,
             "data_signature": context["data_signature"],
-            "aggregation_mode": AGGREGATION_MODE,
             "trained_at": utc_now_naive(),
             "trained_until": context["daily"]["date"].max().date(),
-            "data_days_used": context["data_days_used"],
-            "total_history_days": context["total_history_days"],
-            "history_window_capped": context["history_window_capped"],
-            "parameter_profile": context["parameter_profile"],
-            "weekly_enabled": seasonality["weekly_enabled"],
-            "monthly_enabled": seasonality["monthly_enabled"],
             "storage_key": storage_key,
         }
     )
@@ -192,9 +186,14 @@ def _load_or_train_models(user_id, forecast_days, repository, context, model_sta
     active_model = model_state["active_model"]
     reuse_existing_model = bool(model_state.get("reuse_existing_model"))
     model_data_signature = model_state.get("data_signature") or context["data_signature"]
-    cache_key = _build_model_cache_key(user_id, forecast_days, model_data_signature)
+    cache_key = _build_model_cache_key(user_id, model_data_signature)
+    seasonality = build_prophet_seasonality(
+        forecast_days,
+        context["data_days_used"],
+        context["parameter_profile"],
+    )
     loaded_models = (
-        _load_models_from_active_asset(active_model, cache_key)
+        _load_models_from_active_asset(active_model, cache_key, seasonality)
         if reuse_existing_model
         else None
     )
@@ -217,14 +216,12 @@ def _load_or_train_models(user_id, forecast_days, repository, context, model_sta
     model_asset = _persist_user_model(
         repository,
         user_id,
-        forecast_days,
         context,
-        seasonality,
         sys_model,
         dia_model,
     )
     model_data_signature = context["data_signature"]
-    cache_key = _build_model_cache_key(user_id, forecast_days, model_data_signature)
+    cache_key = _build_model_cache_key(user_id, model_data_signature)
     _get_model_cache().set(
         cache_key,
         {
@@ -261,7 +258,7 @@ def inspect_prophet_model_state_for_user(user_id, forecast_days=7, repository=No
         max_train_days=max_train_days,
         model_version=PROPHET_MODEL_VERSION,
     )
-    active_model = repository.get_active_prophet_model(user_id, forecast_days)
+    active_model = repository.get_active_prophet_model(user_id)
     retrain_threshold_days = max(
         1,
         int(current_app.config.get("PROPHET_RETRAIN_AFTER_DAYS", 3)),
@@ -279,9 +276,15 @@ def inspect_prophet_model_state_for_user(user_id, forecast_days=7, repository=No
     model_data_signature = (
         active_model.data_signature if reuse_existing_model else context["data_signature"]
     )
-    cache_key = _build_model_cache_key(user_id, forecast_days, model_data_signature)
+    cache_key = _build_model_cache_key(user_id, model_data_signature)
+    seasonality = build_prophet_seasonality(
+        forecast_days,
+        context["data_days_used"],
+        context["parameter_profile"],
+    )
     model_cache_hit = bool(
-        reuse_existing_model and _load_models_from_active_asset(active_model, cache_key)
+        reuse_existing_model
+        and _load_models_from_active_asset(active_model, cache_key, seasonality)
     )
     return {
         "repository": repository,

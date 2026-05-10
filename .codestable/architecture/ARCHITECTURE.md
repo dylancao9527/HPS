@@ -315,13 +315,12 @@ Prophet 模型采用三层持久化结构：
 - 用户 ID
 - 模型版本
 - 数据签名
+- 训练时间
 - 训练截止日期
-- 参数画像
-- 季节性配置
 - 文件存储键
 - 是否为当前活跃模型
 
-预测周期已统一为未来 7 天，由预测周期策略和 API 校验保证；`user_prophet_models` 不再保存 `forecast_days` 槽位字段，活跃 Prophet 模型按用户维度管理。
+预测周期已统一为未来 7 天，由预测周期策略和 API 校验保证；`user_prophet_models` 不再保存 `forecast_days` 槽位字段，也不保存 `aggregation_mode`, `data_days_used`, `total_history_days`, `history_window_capped`, `parameter_profile`, `weekly_enabled`, `monthly_enabled` 等可由训练上下文或预测记录说明承载的字段。活跃 Prophet 模型按用户维度管理。
 
 ### 2. 文件资产层：`backend/runtime/prophet_models/`
 
@@ -335,6 +334,8 @@ user_<user_id>/<model_version>/<data_signature>/
 
 - `sys_model.pkl`
 - `dia_model.pkl`
+
+旧版 `user_<user_id>/fd_<forecast_days>/<model_version>/<data_signature>/` 目录不再作为可复用模型资产兼容；清理命令会删除 legacy 目录，本地旧模型资产删除后由下一次预测重新生成。
 
 ### 3. 内存缓存层：`InMemoryProphetModelCache`
 
@@ -499,7 +500,7 @@ user_<user_id>/<model_version>/<data_signature>/
 
 ### `user_prophet_models`
 
-保存 Prophet 模型资产元数据和治理字段。固定 7 天预测周期不再作为模型资产槽位保存；模型表按用户记录当前活跃模型、模型版本、数据签名、训练窗口、参数画像、季节性配置和文件存储键。
+保存 Prophet 模型资产指针。固定 7 天预测周期不再作为模型资产槽位保存；模型表按用户记录当前活跃模型、模型版本、数据签名、训练时间、训练截止日期和文件存储键。训练说明、参数画像和季节性配置写入 `prediction_records.training_meta`，不再作为模型资产表字段。
 
 ## 10.2 紧凑预测记录载荷
 

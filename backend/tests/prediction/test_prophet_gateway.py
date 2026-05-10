@@ -51,9 +51,36 @@ def test_prophet_model_store_uses_fixed_7_day_free_storage_keys(tmp_path):
     current_dir.mkdir(parents=True)
 
     assert store.list_storage_keys() == [
-        "user_42/fd_7/user-prophet-v1/legacy-signature",
         "user_42/user-prophet-v1/current-signature",
     ]
+    assert store.list_legacy_storage_keys() == [
+        "user_42/fd_7/user-prophet-v1/legacy-signature",
+    ]
+
+
+def test_load_models_from_active_asset_rejects_legacy_fd_storage_key(monkeypatch):
+    active_model = SimpleNamespace(
+        model_version=prophet_gateway.PROPHET_MODEL_VERSION,
+        data_signature="legacy-signature",
+        storage_key="user_42/fd_7/user-prophet-v1/legacy-signature",
+    )
+
+    monkeypatch.setattr(
+        prophet_gateway,
+        "_get_model_cache",
+        lambda: (_ for _ in ()).throw(
+            AssertionError("legacy storage key must not reach cache lookup")
+        ),
+    )
+
+    assert (
+        prophet_gateway._load_models_from_active_asset(
+            active_model,
+            (42, prophet_gateway.PROPHET_MODEL_VERSION, "legacy-signature"),
+            {"weekly_enabled": False, "monthly_enabled": False},
+        )
+        is None
+    )
 
 
 def test_training_context_builder_aggregates_daily_sequence_and_confidence():
@@ -158,7 +185,7 @@ def test_inspect_prophet_state_counts_new_days_outside_training_window(monkeypat
     )
     daily_repository = FakeDailyBPSeriesRepository()
     prediction_repository = SimpleNamespace(
-        get_active_prophet_model=lambda user_id, forecast_days: SimpleNamespace(
+        get_active_prophet_model=lambda user_id: SimpleNamespace(
             model_version=prophet_gateway.PROPHET_MODEL_VERSION,
             data_signature="active-signature",
             trained_until=date(2026, 4, 20),
@@ -428,16 +455,15 @@ def test_predict_bp_trend_reuses_loaded_active_model(monkeypatch):
     context = make_training_context("current-signature")
     sys_model = FakeProphetModel("sys-reused")
     dia_model = FakeProphetModel("dia-reused")
-    loaded_seasonality = {"weekly_enabled": True, "monthly_enabled": False}
     forecast = [{"day": 1, "systolic": 132.0, "diastolic": 84.0}]
     calls = {}
 
-    def fake_load_models(model, cache_key):
-        calls["load"] = (model, cache_key)
+    def fake_load_models(model, cache_key, seasonality):
+        calls["load"] = (model, cache_key, seasonality)
         return {
             "sys_model": sys_model,
             "dia_model": dia_model,
-            "seasonality": loaded_seasonality,
+            "seasonality": seasonality,
         }
 
     def fake_predict(loaded_sys_model, loaded_dia_model, forecast_days):
@@ -477,11 +503,12 @@ def test_predict_bp_trend_reuses_loaded_active_model(monkeypatch):
 
     assert calls["load"] == (
         active_model,
-        (42, 7, prophet_gateway.PROPHET_MODEL_VERSION, "active-signature"),
+        (42, prophet_gateway.PROPHET_MODEL_VERSION, "active-signature"),
+        {"weekly_enabled": False, "monthly_enabled": False},
     )
     assert calls["predict"] == (sys_model, dia_model, 7)
     assert result["forecast"] == forecast
-    assert result["seasonality"] == loaded_seasonality
+    assert result["seasonality"] == {"weekly_enabled": False, "monthly_enabled": False}
     assert result["model_cache_hit"] is True
     assert result["model_asset_id"] == 77
     assert result["model_strategy"] == "reuse_existing_model"
@@ -508,18 +535,14 @@ def test_predict_bp_trend_trains_and_caches_when_reuse_disabled(monkeypatch):
     def fake_persist_model(
         model_repository,
         user_id,
-        forecast_days,
         model_context,
-        seasonality,
         sys_model,
         dia_model,
     ):
         calls["persist"] = (
             model_repository,
             user_id,
-            forecast_days,
             model_context,
-            seasonality,
             sys_model,
             dia_model,
         )
@@ -576,15 +599,13 @@ def test_predict_bp_trend_trains_and_caches_when_reuse_disabled(monkeypatch):
     assert calls["persist"] == (
         repository,
         42,
-        7,
         context,
-        {"weekly_enabled": False, "monthly_enabled": False},
         sys_model,
         dia_model,
     )
     assert model_cache.set_calls == [
         (
-            (42, 7, prophet_gateway.PROPHET_MODEL_VERSION, "current-signature"),
+            (42, prophet_gateway.PROPHET_MODEL_VERSION, "current-signature"),
             {
                 "sys_model": sys_model,
                 "dia_model": dia_model,

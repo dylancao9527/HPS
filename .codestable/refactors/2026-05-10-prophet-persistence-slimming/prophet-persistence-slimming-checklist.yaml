@@ -2,29 +2,35 @@ refactor: 2026-05-10-prophet-persistence-slimming
 status: completed
 steps:
   - id: step-1-characterization-tests
-    title: 补目标形态刻画测试
+    title: 补强目标形态刻画测试
     status: done
     method: M-L1-01
     verification:
       - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py::test_prophet_model_store_uses_fixed_7_day_free_storage_keys -q
       - cd backend && uv run pytest tests/prediction/test_forecast_period_policy.py -q
-  - id: step-2-storage-key-compatibility
-    title: 兼容新旧 Prophet 资产路径
+  - id: step-2-storage-and-repository-slimming
+    title: 简化 Prophet 资产路径与持久化调用
     status: done
     method: M-L1-01
     verification:
-      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py::test_prophet_model_store_uses_fixed_7_day_free_storage_keys -q
       - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py -q
-  - id: step-3-remove-model-forecast-days
-    title: 移除 user_prophet_models.forecast_days 数据库槽位
-    status: done
-    method: M-L1-01
-    verification:
-      - cd backend && uv run pytest tests/prediction/test_forecast_period_policy.py -q
       - cd backend && uv run pytest tests/prediction/test_prediction_repository_boundaries.py::test_get_active_prophet_model_delegates_to_prophet_models -q
-      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py -q
-  - id: step-4-docs-and-final-verification
-    title: 同步架构说明并做整体验证
+  - id: step-3-slim-model-table-migration
+    title: 精简 user_prophet_models 表和迁移
+    status: done
+    method: M-L1-01
+    verification:
+      - cd backend && uv run pytest tests/prediction/test_forecast_period_policy.py -q
+      - cd backend && uv run python -m py_compile migrations/versions/75f5fe8065f4_initial_schema.py
+  - id: step-4-delete-legacy-assets-and-docs
+    title: 删除旧资产并同步文档
+    status: done
+    method: M-L1-01
+    verification:
+      - removed_legacy_fd_dirs=14
+      - python .codestable/tools/validate-yaml.py --dir .codestable/refactors/2026-05-10-prophet-persistence-slimming
+  - id: step-5-final-verification
+    title: 整体验证
     status: done
     method: M-L1-01
     verification:
@@ -32,18 +38,21 @@ steps:
       - cd backend && uv run pytest -q
       - rg -n "UserProphetModel\\.forecast_days|fd_\\{|fd_7" backend/prediction backend/models --glob "*.py"
 checks:
-  - id: scope-1-selected-items-only
-    title: 只实现 scan #1 和 #2
+  - id: scope-1-selected-items-expanded
+    title: 实现 scan #1 #2 和用户追加确认的 #3
     status: passed
-  - id: scope-2-keep-prophet-metadata-columns
-    title: 保留 aggregation_mode weekly_enabled monthly_enabled
+  - id: scope-2-no-legacy-model-reuse
+    title: 不兼容复用旧 fd_* 模型资产
+    status: passed
+  - id: scope-3-model-table-essential-fields-only
+    title: user_prophet_models 只保留模型复用必需指针字段
     status: passed
   - id: behavior-1-fixed-seven-day-api-validation
     title: 保留现有 7 天预测 API 校验语义
     status: passed
-  - id: compatibility-1-legacy-storage-keys-readable
-    title: 旧 fd_7 storage_key 仍可读取清理
+  - id: migration-1-upgrade-clears-old-model-metadata
+    title: 新迁移 upgrade 先清空旧 user_prophet_models 行
     status: passed
-  - id: migration-1-downgrade-restores-forecast-days
-    title: 新迁移 downgrade 可恢复 forecast_days=7
+  - id: runtime-1-old-local-models-deleted
+    title: 本地旧 fd_* Prophet 模型目录已删除
     status: passed

@@ -21,14 +21,42 @@ def build_prophet_model(
 
     返回 (model, seasonality_dict)。
     """
-    weekly_enabled = False
-    monthly_enabled = False
-
     changepoint_prior_scale = 0.05
     if parameter_profile == "short":
         changepoint_prior_scale = 0.02
     elif parameter_profile == "volatile":
         changepoint_prior_scale = 0.1
+
+    seasonality = build_prophet_seasonality(
+        forecast_days,
+        data_days_used,
+        parameter_profile,
+    )
+
+    from prophet import Prophet
+
+    prophet_kwargs: dict[str, Any] = {
+        "changepoint_prior_scale": changepoint_prior_scale,
+        "seasonality_mode": "additive",
+        "daily_seasonality": False,
+        "weekly_seasonality": seasonality["weekly_enabled"],
+        "yearly_seasonality": False,
+    }
+    model = Prophet(**prophet_kwargs)
+
+    if seasonality["monthly_enabled"]:
+        model.add_seasonality(name="monthly", period=30.5, fourier_order=3)
+
+    return model, seasonality
+
+
+def build_prophet_seasonality(
+    forecast_days: int,
+    data_days_used: int,
+    parameter_profile: str,
+) -> dict[str, bool]:
+    weekly_enabled = False
+    monthly_enabled = False
 
     if parameter_profile != "short":
         if forecast_days == 7:
@@ -37,25 +65,10 @@ def build_prophet_model(
             weekly_enabled = data_days_used >= SHORT_HISTORY_DAYS
             monthly_enabled = data_days_used >= HIGH_CONFIDENCE_DAYS
 
-    from prophet import Prophet
-
-    prophet_kwargs: dict[str, Any] = {
-        "changepoint_prior_scale": changepoint_prior_scale,
-        "seasonality_mode": "additive",
-        "daily_seasonality": False,
-        "weekly_seasonality": weekly_enabled,
-        "yearly_seasonality": False,
-    }
-    model = Prophet(**prophet_kwargs)
-
-    if monthly_enabled:
-        model.add_seasonality(name="monthly", period=30.5, fourier_order=3)
-
-    seasonality = {
+    return {
         "weekly_enabled": weekly_enabled,
         "monthly_enabled": monthly_enabled,
     }
-    return model, seasonality
 
 
 def train_models_for_context(forecast_days, context):

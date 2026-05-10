@@ -31,14 +31,29 @@ def test_forecast_period_storage_keeps_prediction_history_compact():
         index.name: [column.name for column in index.columns]
         for index in UserProphetModel.__table__.indexes
     }
+    removed_model_columns = {
+        "forecast_days",
+        "aggregation_mode",
+        "data_days_used",
+        "total_history_days",
+        "history_window_capped",
+        "parameter_profile",
+        "weekly_enabled",
+        "monthly_enabled",
+    }
 
     assert "forecast_days" not in prediction_columns
-    assert "forecast_days" not in model_columns
+    assert removed_model_columns.isdisjoint(model_columns)
     assert "bp_forecast" in prediction_columns
     assert "ck_user_prophet_models_forecast_days_7" not in model_constraints
+    assert set(model_indexes) == {
+        "ix_user_prophet_models_active_slot_trained",
+        "ix_user_prophet_models_user_id",
+    }
     assert model_indexes["ix_user_prophet_models_active_slot_trained"] == [
         "user_id",
         "is_active",
         "trained_at",
         "id",
     ]
+    assert model_indexes["ix_user_prophet_models_user_id"] == ["user_id"]
