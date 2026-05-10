@@ -1,0 +1,27 @@
+flowchart TD
+  A["一次成功预测"] --> B["prediction_records<br/>不可变预测记录"]
+  B --> C["普通列<br/>风险概率、风险等级、训练天数、置信度、运行模式、异常标记"]
+  B --> D["JSON载荷<br/>input_snapshot、bp_forecast、fusion_meta、training_meta、recommendations、anomaly_flags"]
+
+  C --> E["治理摘要统计"]
+  D --> E
+  E --> E1["风险等级分布"]
+  E --> E2["置信度分布"]
+  E --> E3["异常预测数量"]
+  E --> E4["Prophet复用/重训次数"]
+
+  C --> F["治理筛选列表"]
+  D --> F
+  F --> F1["按风险等级筛选"]
+  F --> F2["按置信度筛选"]
+  F --> F3["按异常类型筛选"]
+
+  F --> G["单条预测详情"]
+  G --> G1["输入快照"]
+  G --> G2["融合元数据"]
+  G --> G3["Prophet训练说明"]
+  G --> G4["指南型健康建议"]
+
+  F --> H["治理数据导出"]
+  G --> H
+  H --> I["管理员查看、追踪、导出<br/>不修改预测结果"]

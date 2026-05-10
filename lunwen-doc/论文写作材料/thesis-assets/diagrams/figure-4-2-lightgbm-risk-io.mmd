@@ -1,0 +1,23 @@
+flowchart LR
+  subgraph P["风险因素档案"]
+    P1["年龄 age"]
+    P2["性别 male"]
+    P3["BMI"]
+    P4["吸烟 currentSmoker / cigsPerDay"]
+    P5["降压药 BPMeds"]
+    P6["糖尿病 diabetes"]
+    P7["总胆固醇 totChol"]
+    P8["血糖 glucose"]
+    P9["心率 heartRate"]
+  end
+
+  subgraph F["Prophet预测期血压特征"]
+    F1["未来7天预测收缩压均值 sysBP"]
+    F2["未来7天预测舒张压均值 diaBP"]
+  end
+
+  P --> M["LightGBM风险分类模型<br/>按固定特征顺序构造特征向量"]
+  F --> M
+  M --> R1["raw_probability<br/>高血压风险原始概率"]
+  R1 --> R2["风险阈值与等级映射<br/>低 / 中 / 高"]
+  R1 --> R3["进入趋势融合策略<br/>生成最终风险概率"]
