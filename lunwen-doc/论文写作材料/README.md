@@ -11,7 +11,7 @@
 | `基于Prophet与LightGBM的高血压风险预测系统设计与实现-参考文献池.md` | 参考文献候选与引用建议 |
 | `基于Prophet与LightGBM的高血压风险预测系统设计与实现-参考文献核验清单.json` | 参考文献真实性与来源核验记录 |
 | `基于Prophet与LightGBM的高血压风险预测系统设计与实现-图片清单.md` | 第4章图表、截图、图题和放置位置 |
-| `thesis-assets/diagrams/` | Mermaid / draw.io 源码及导出的模型图、流程图、E-R 图；图4-5 以 draw.io 为正式源文件 |
+| `thesis-assets/diagrams/` | Mermaid / draw.io 源码及导出的模型图、流程图、E-R 图；图4-5 以 draw.io 为正式源文件，本轮只更新 `.drawio` 源文件 |
 | `thesis-assets/screenshots/` | 第4章系统页面截图 |
 
 ## 中间产物位置

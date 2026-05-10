@@ -56,3 +56,40 @@
 - 重新生成 `figure-4-5-core-er.png` 与 `figure-4-5-core-er.svg`，补全核心实体字段，标注 PK、FK、派生属性 BMI 和 1/N 基数。
 - 更新主论文 §4.4、图片清单和论文写作材料 README，说明图4-5 的正式源文件为 draw.io。
 - 当前环境未发现 draw.io CLI，因此 `.drawio` 由标准 XML 生成，PNG/SVG 由同一布局导出预览；后续可用 draw.io Desktop 打开 `.drawio` 继续微调。
+
+## 2026-05-11
+
+### 本次任务启动
+
+- 用户要求基于 `652df0572920c53945dfb670b4d1277ee63391a1..1fb193487b69562f1bfd0f5e8537b36368191560` 的代码变化更新论文。
+- 已读取并应用 `lunwen`、`planning-with-files-zh`、`drawio-skill`。
+- 本轮明确约束：E-R 图只更新 `.drawio` 源文件，不执行图片导出。
+
+### 遇到的错误
+
+| 错误 | 尝试次数 | 解决方案 |
+|---|---:|---|
+| PowerShell `Select-Object -Index 82..95` 不能把范围字符串转换为整数 | 1 | 后续改用 `Select-Object -Index (82..95)` |
+
+### 当前发现
+
+- `figure-4-5-core-er.drawio` 中 `user_prophet_models` 仍保留旧属性，如 `forecast_days`、`aggregation_mode`、`data_days_used`、`parameter_profile`、`weekly_enabled`、`monthly_enabled` 等；当前代码已精简为模型资产索引表，需要删除这些属性，只保留当前 schema 字段。
+
+### 本次已完成
+
+- 更新主论文 Markdown：
+  - Prophet 模型资产表口径改为版本、数据签名、训练截止日期、存储键和活跃状态。
+  - 训练说明、参数画像、置信度等级和运行模式改为随单次预测记录保存。
+  - 补充固定 7 天预测后缓存键和存储路径不再包含可变预测周期槽位。
+  - 补充 LightGBM 训练 hash 稳定化、调参窗口参数透传。
+  - 补充输入边界、验证码安全和本地调试接口安全测试。
+- 更新 `figure-4-5-core-er.drawio`：
+  - 删除旧 Prophet 模型属性 `forecast_days`、`aggregation_mode`、`total_history_days`、`history_window_capped`、`parameter_profile`、`weekly_enabled`、`monthly_enabled` 等。
+  - 只保留当前 `user_prophet_models` schema 对应属性。
+- 更新论文材料 README 和图片清单，明确本轮只维护 `figure-4-5-core-er.drawio`，不导出图片。
+
+### 校验结果
+
+- drawio XML 解析通过。
+- 已确认主论文和 E-R 图源中不再出现旧 Prophet 模型表字段口径：`forecast_days`、`aggregation_mode`、`total_history_days`、`history_window_capped`、`parameter_profile`、`weekly_enabled`、`monthly_enabled`。
+- `git diff --check` 通过。

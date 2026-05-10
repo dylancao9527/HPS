@@ -4,7 +4,7 @@
 
 - 图表资产目录：`lunwen-doc/论文写作材料/thesis-assets/diagrams/`
 - 页面截图目录：`lunwen-doc/论文写作材料/thesis-assets/screenshots/`
-- 模型图大多保留 `.mmd`、`.png`、`.svg` 三种文件；图4-5 E-R 图因需要规范实体、联系、属性和基数标注，正式源文件改为 `.drawio`，后续附件 `.docx` 需收录该 `.drawio` 源文件或导出的 XML 源码。
+- 模型图大多保留 `.mmd`、`.png`、`.svg` 三种文件；图4-5 E-R 图因需要规范实体、联系、属性和基数标注，正式源文件改为 `.drawio`，后续附件 `.docx` 需收录该 `.drawio` 源文件或导出的 XML 源码。本轮根据最新数据库结构只更新 `figure-4-5-core-er.drawio`，不重新导出 PNG/SVG/PDF。
 - 页面截图基于本地系统真实运行页面生成；普通用户使用 `demo_showcase_high`，管理员使用 `demo_admin_showcase`。
 - 预测结果截图来自真实 `/api/predict` 调用，生成了 Prophet 血压趋势预测与 LightGBM 风险概率输出。
 
@@ -16,7 +16,7 @@
 | 图4-2 | LightGBM 风险分类输入输出图 | `lunwen-doc/论文写作材料/thesis-assets/diagrams/figure-4-2-lightgbm-risk-io.png` | §4.2 | 说明风险因素档案与 Prophet 预测期血压特征如何进入 LightGBM |
 | 图4-3 | Prophet-LightGBM 双模型预测链路图 | `lunwen-doc/论文写作材料/thesis-assets/diagrams/figure-4-3-prophet-lightgbm-pipeline.png` | §4.3 | 作为第4章模型链路主图，展示双模型串联、风险融合、建议与记录留存 |
 | 图4-4 | 预测结果治理链路图 | `lunwen-doc/论文写作材料/thesis-assets/diagrams/figure-4-4-prediction-governance-flow.png` | §4.3 或 §4.5 | 说明预测记录如何支撑历史回看、治理筛选与导出 |
-| 图4-5 | 核心实体 E-R 图 | `lunwen-doc/论文写作材料/thesis-assets/diagrams/figure-4-5-core-er.png` | §4.4 | 按 Chen E-R 图规范说明用户、风险因素档案、血压记录、预测记录和 Prophet 模型元数据关系；源文件为 `figure-4-5-core-er.drawio` |
+| 图4-5 | 核心实体 E-R 图 | `lunwen-doc/论文写作材料/thesis-assets/diagrams/figure-4-5-core-er.drawio` | §4.4 | 按 Chen E-R 图规范说明用户、风险因素档案、血压记录、预测记录和精简后的 Prophet 模型资产索引关系；本轮只维护 draw.io 源文件 |
 | 图4-6 | 风险因素档案页面 | `lunwen-doc/论文写作材料/thesis-assets/screenshots/figure-4-6-risk-factor-profile-page.png` | §4.5 | 展示参与模型预测的年龄、性别、BMI、吸烟、用药、糖尿病等风险因素维护 |
 | 图4-7 | 血压记录页面 | `lunwen-doc/论文写作材料/thesis-assets/screenshots/figure-4-7-bp-records-page.png` | §4.5 | 展示用户日常血压记录列表和分页管理 |
 | 图4-8 | 7 天风险预测页面 | `lunwen-doc/论文写作材料/thesis-assets/screenshots/figure-4-8-risk-prediction-page.png` | §4.5 | 展示预测前的数据准备状态、血压数据充分性和预测入口 |
