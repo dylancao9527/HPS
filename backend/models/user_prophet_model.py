@@ -5,14 +5,9 @@ from utils.time_utils import utc_now_naive
 class UserProphetModel(db.Model):
     __tablename__ = 'user_prophet_models'
     __table_args__ = (
-        db.CheckConstraint(
-            'forecast_days = 7',
-            name='forecast_days_7',
-        ),
         db.Index(
             'ix_user_prophet_models_active_slot_trained',
             'user_id',
-            'forecast_days',
             'is_active',
             'trained_at',
             'id',
@@ -21,7 +16,6 @@ class UserProphetModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    forecast_days = db.Column(db.Integer, nullable=False, default=7)
     model_version = db.Column(db.String(64), nullable=False, index=True)
     data_signature = db.Column(db.String(64), nullable=False, index=True)
     aggregation_mode = db.Column(db.String(32), nullable=False)
@@ -40,7 +34,6 @@ class UserProphetModel(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
-            'forecast_days': self.forecast_days,
             'model_version': self.model_version,
             'data_signature': self.data_signature,
             'aggregation_mode': self.aggregation_mode,

@@ -1,0 +1,49 @@
+refactor: 2026-05-10-prophet-persistence-slimming
+status: completed
+steps:
+  - id: step-1-characterization-tests
+    title: 补目标形态刻画测试
+    status: done
+    method: M-L1-01
+    verification:
+      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py::test_prophet_model_store_uses_fixed_7_day_free_storage_keys -q
+      - cd backend && uv run pytest tests/prediction/test_forecast_period_policy.py -q
+  - id: step-2-storage-key-compatibility
+    title: 兼容新旧 Prophet 资产路径
+    status: done
+    method: M-L1-01
+    verification:
+      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py::test_prophet_model_store_uses_fixed_7_day_free_storage_keys -q
+      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py -q
+  - id: step-3-remove-model-forecast-days
+    title: 移除 user_prophet_models.forecast_days 数据库槽位
+    status: done
+    method: M-L1-01
+    verification:
+      - cd backend && uv run pytest tests/prediction/test_forecast_period_policy.py -q
+      - cd backend && uv run pytest tests/prediction/test_prediction_repository_boundaries.py::test_get_active_prophet_model_delegates_to_prophet_models -q
+      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py -q
+  - id: step-4-docs-and-final-verification
+    title: 同步架构说明并做整体验证
+    status: done
+    method: M-L1-01
+    verification:
+      - cd backend && uv run pytest tests/prediction/test_prophet_gateway.py tests/prediction/test_forecast_period_policy.py tests/prediction/test_prediction_repository_boundaries.py -q
+      - cd backend && uv run pytest -q
+      - rg -n "UserProphetModel\\.forecast_days|fd_\\{|fd_7" backend/prediction backend/models --glob "*.py"
+checks:
+  - id: scope-1-selected-items-only
+    title: 只实现 scan #1 和 #2
+    status: passed
+  - id: scope-2-keep-prophet-metadata-columns
+    title: 保留 aggregation_mode weekly_enabled monthly_enabled
+    status: passed
+  - id: behavior-1-fixed-seven-day-api-validation
+    title: 保留现有 7 天预测 API 校验语义
+    status: passed
+  - id: compatibility-1-legacy-storage-keys-readable
+    title: 旧 fd_7 storage_key 仍可读取清理
+    status: passed
+  - id: migration-1-downgrade-restores-forecast-days
+    title: 新迁移 downgrade 可恢复 forecast_days=7
+    status: passed

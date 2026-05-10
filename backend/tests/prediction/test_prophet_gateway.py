@@ -8,6 +8,7 @@ from flask import Flask
 from bp_series.domain import DailyBPSeriesPoint
 from prediction.infrastructure import prophet_gateway
 from prediction.infrastructure.prophet_model_lifecycle import ProphetModelLifecycle
+from prediction.infrastructure.prophet_model_store import LocalProphetModelStore
 from prediction.infrastructure.prophet_lifecycle_policy import should_reuse_prophet_model
 from prediction.infrastructure.prophet_training_context import (
     build_daily_training_frame,
@@ -31,6 +32,28 @@ class FakeModelCache:
 
     def set(self, cache_key, payload):
         self.set_calls.append((cache_key, payload))
+
+
+def test_prophet_model_store_uses_fixed_7_day_free_storage_keys(tmp_path):
+    store = LocalProphetModelStore(tmp_path)
+
+    storage_key = store.build_storage_key(
+        user_id=42,
+        model_version="user-prophet-v1",
+        data_signature="current-signature",
+    )
+
+    assert storage_key == "user_42/user-prophet-v1/current-signature"
+
+    legacy_dir = tmp_path / "user_42" / "fd_7" / "user-prophet-v1" / "legacy-signature"
+    legacy_dir.mkdir(parents=True)
+    current_dir = tmp_path / "user_42" / "user-prophet-v1" / "current-signature"
+    current_dir.mkdir(parents=True)
+
+    assert store.list_storage_keys() == [
+        "user_42/fd_7/user-prophet-v1/legacy-signature",
+        "user_42/user-prophet-v1/current-signature",
+    ]
 
 
 def test_training_context_builder_aggregates_daily_sequence_and_confidence():

@@ -8,11 +8,10 @@ from models import UserProphetModel
 
 
 class ProphetModelRepository:
-    def get_active_prophet_model(self, user_id, forecast_days):
+    def get_active_prophet_model(self, user_id, forecast_days=None):
         return (
             UserProphetModel.query.filter_by(
                 user_id=user_id,
-                forecast_days=forecast_days,
                 is_active=True,
             )
             .order_by(UserProphetModel.trained_at.desc(), UserProphetModel.id.desc())
@@ -22,13 +21,11 @@ class ProphetModelRepository:
     def save_user_prophet_model(self, payload):
         UserProphetModel.query.filter_by(
             user_id=payload["user_id"],
-            forecast_days=payload["forecast_days"],
             is_active=True,
         ).update({"is_active": False}, synchronize_session=False)
 
         row = UserProphetModel(
             user_id=payload["user_id"],
-            forecast_days=payload["forecast_days"],
             model_version=payload["model_version"],
             data_signature=payload["data_signature"],
             aggregation_mode=payload["aggregation_mode"],
@@ -60,7 +57,6 @@ class ProphetModelRepository:
                 SELECT
                     id,
                     user_id,
-                    forecast_days,
                     model_version,
                     data_signature,
                     sys_model_blob,
@@ -101,16 +97,15 @@ class ProphetModelRepository:
             UserProphetModel.query.filter_by(is_active=False)
             .order_by(
                 UserProphetModel.user_id.asc(),
-                UserProphetModel.forecast_days.asc(),
                 UserProphetModel.trained_at.desc(),
                 UserProphetModel.id.desc(),
             )
             .all()
         )
-        kept: dict[tuple[int, int], int] = {}
+        kept: dict[int, int] = {}
         deleted = []
         for row in rows:
-            slot = (row.user_id, row.forecast_days)
+            slot = row.user_id
             slot_kept = kept.get(slot, 0)
             if slot_kept < keep_inactive_per_slot and row.trained_at >= cutoff:
                 kept[slot] = slot_kept + 1

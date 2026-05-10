@@ -25,8 +25,8 @@ class LocalProphetModelStore:
     def __init__(self, root):
         self.root = Path(root)
 
-    def build_storage_key(self, *, user_id, forecast_days, model_version, data_signature):
-        return f"user_{user_id}/fd_{forecast_days}/{model_version}/{data_signature}"
+    def build_storage_key(self, *, user_id, model_version, data_signature):
+        return f"user_{user_id}/{model_version}/{data_signature}"
 
     def _bundle_dir(self, storage_key: str) -> Path:
         return self.root / storage_key
@@ -62,8 +62,17 @@ class LocalProphetModelStore:
     def list_storage_keys(self) -> list[str]:
         if not self.root.exists():
             return []
+        keys: set[str] = set()
+        for path in self.root.glob("user_*/*/*"):
+            if not path.is_dir():
+                continue
+            relative = path.relative_to(self.root)
+            parts = relative.parts
+            if len(parts) == 3 and not parts[1].startswith("fd_"):
+                keys.add(str(relative).replace("\\", "/"))
+        for path in self.root.glob("user_*/fd_*/*/*"):
+            if path.is_dir():
+                keys.add(str(path.relative_to(self.root)).replace("\\", "/"))
         return sorted(
-            str(path.relative_to(self.root)).replace("\\", "/")
-            for path in self.root.glob("user_*/fd_*/*/*")
-            if path.is_dir()
+            keys
         )

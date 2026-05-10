@@ -313,7 +313,6 @@ Prophet 模型采用三层持久化结构：
 保存：
 
 - 用户 ID
-- `forecast_days`
 - 模型版本
 - 数据签名
 - 训练截止日期
@@ -322,12 +321,14 @@ Prophet 模型采用三层持久化结构：
 - 文件存储键
 - 是否为当前活跃模型
 
+预测周期已统一为未来 7 天，由预测周期策略和 API 校验保证；`user_prophet_models` 不再保存 `forecast_days` 槽位字段，活跃 Prophet 模型按用户维度管理。
+
 ### 2. 文件资产层：`backend/runtime/prophet_models/`
 
 按如下结构保存：
 
 ```text
-user_<user_id>/fd_<forecast_days>/<model_version>/<data_signature>/
+user_<user_id>/<model_version>/<data_signature>/
 ```
 
 其中包含：
@@ -498,7 +499,7 @@ user_<user_id>/fd_<forecast_days>/<model_version>/<data_signature>/
 
 ### `user_prophet_models`
 
-保存 Prophet 模型元数据和治理字段。
+保存 Prophet 模型资产元数据和治理字段。固定 7 天预测周期不再作为模型资产槽位保存；模型表按用户记录当前活跃模型、模型版本、数据签名、训练窗口、参数画像、季节性配置和文件存储键。
 
 ## 10.2 紧凑预测记录载荷
 

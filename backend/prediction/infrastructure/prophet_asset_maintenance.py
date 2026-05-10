@@ -16,7 +16,6 @@ def register_prophet_asset_commands(app):
         for row in repository.list_prophet_models_with_legacy_blobs(limit=batch_size):
             storage_key = store.build_storage_key(
                 user_id=row["user_id"],
-                forecast_days=row["forecast_days"],
                 model_version=row["model_version"],
                 data_signature=row["data_signature"],
             )

@@ -23,10 +23,22 @@ def test_forecast_period_policy_accepts_only_future_7_days():
 
 def test_forecast_period_storage_keeps_prediction_history_compact():
     prediction_columns = set(PredictionRecord.__table__.c.keys())
+    model_columns = set(UserProphetModel.__table__.c.keys())
     model_constraints = {
         constraint.name for constraint in UserProphetModel.__table__.constraints
     }
+    model_indexes = {
+        index.name: [column.name for column in index.columns]
+        for index in UserProphetModel.__table__.indexes
+    }
 
     assert "forecast_days" not in prediction_columns
+    assert "forecast_days" not in model_columns
     assert "bp_forecast" in prediction_columns
-    assert "ck_user_prophet_models_forecast_days_7" in model_constraints
+    assert "ck_user_prophet_models_forecast_days_7" not in model_constraints
+    assert model_indexes["ix_user_prophet_models_active_slot_trained"] == [
+        "user_id",
+        "is_active",
+        "trained_at",
+        "id",
+    ]

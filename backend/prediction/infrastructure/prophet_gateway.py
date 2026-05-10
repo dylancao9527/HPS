@@ -141,7 +141,6 @@ def _persist_user_model(repository, user_id, forecast_days, context, seasonality
     store = _get_model_store()
     storage_key = store.build_storage_key(
         user_id=user_id,
-        forecast_days=forecast_days,
         model_version=PROPHET_MODEL_VERSION,
         data_signature=context["data_signature"],
     )
@@ -151,7 +150,6 @@ def _persist_user_model(repository, user_id, forecast_days, context, seasonality
     return repository.save_user_prophet_model(
         {
             "user_id": user_id,
-            "forecast_days": forecast_days,
             "model_version": PROPHET_MODEL_VERSION,
             "data_signature": context["data_signature"],
             "aggregation_mode": AGGREGATION_MODE,
