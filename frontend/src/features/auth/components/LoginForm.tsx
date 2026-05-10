@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import Captcha from '@/components/Captcha'
 import { useAuth } from '@/hooks/useAuth'
-import { getLatestMockEmail, request } from '@/config/api'
+import { getLatestMockEmail, request, shouldExposeLocalMockEmailCode } from '@/config/api'
 import ResetPasswordModal from '@/features/auth/components/ResetPasswordModal'
 import {
   getEmailValidationError,
@@ -113,7 +113,7 @@ export default function LoginForm({
         method: 'POST',
         body: JSON.stringify({ email: resetEmail }),
       })
-      if (data.mock_service === 'local_email') {
+      if (data.mock_service === 'local_email' && shouldExposeLocalMockEmailCode()) {
         const mockEmail = await getLatestMockEmail(resetEmail.trim(), 'reset_password')
         setDebugCode(mockEmail.code || '')
       } else {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import Captcha from '@/components/Captcha'
-import { getLatestMockEmail, request } from '@/config/api'
+import { getLatestMockEmail, request, shouldExposeLocalMockEmailCode } from '@/config/api'
 import { useAuth } from '@/hooks/useAuth'
 import RegisterEmailCodeSection from '@/features/auth/components/RegisterEmailCodeSection'
 import {
@@ -80,7 +80,7 @@ export default function RegisterForm({ loginHref }: RegisterFormProps) {
         method: 'POST',
         body: JSON.stringify({ email: email.trim() }),
       })
-      if (data.mock_service === 'local_email') {
+      if (data.mock_service === 'local_email' && shouldExposeLocalMockEmailCode()) {
         const mockEmail = await getLatestMockEmail(email.trim(), 'register')
         setDebugCode(mockEmail.code || '')
       } else {

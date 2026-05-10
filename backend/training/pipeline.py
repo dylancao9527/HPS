@@ -120,6 +120,8 @@ def run_feature_ablation(
             categorical,
             random_seed=random_seed,
             learning_rate=config.learning_rate,
+            max_boost_rounds=config.max_boost_rounds,
+            early_stopping_rounds=config.early_stopping_rounds,
         )
         _, optimized_metrics = _train_final_cycle(
             tuning_summary.params,
@@ -184,6 +186,8 @@ def run_multi_seed_audit(
             categorical_features,
             random_seed=seed,
             learning_rate=config.learning_rate,
+            max_boost_rounds=config.max_boost_rounds,
+            early_stopping_rounds=config.early_stopping_rounds,
         )
         _, optimized_metrics = _train_final_cycle(
             tuning_summary.params,
@@ -257,6 +261,8 @@ def run_training(
         categorical_features,
         random_seed=random_seed,
         learning_rate=config.learning_rate,
+        max_boost_rounds=config.max_boost_rounds,
+        early_stopping_rounds=config.early_stopping_rounds,
     )
     progress.finish_step(
         cv_auc=tuning_summary.cv_auc,

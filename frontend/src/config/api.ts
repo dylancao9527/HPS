@@ -9,6 +9,13 @@ import type { ApiErrorResponse, ApiRequestOptions, MockEmailMessage, MockEmailRe
  */
 const API_BASE: string = import.meta.env.VITE_API_BASE || '/api'
 
+function shouldExposeLocalMockEmailCode(): boolean {
+  return (
+    String(import.meta.env.DEV) === 'true'
+    || import.meta.env.VITE_ENABLE_LOCAL_MOCK_EMAIL_UI === 'true'
+  )
+}
+
 function parseResponseBody<T>(bodyText: string, contentType: string | null): T | string | Record<string, never> {
   if (!bodyText) return {}
 
@@ -54,4 +61,10 @@ async function getLatestMockEmail(email: string, scene: string): Promise<MockEma
   return data.message
 }
 
-export { API_BASE, getLatestMockEmail, parseResponseBody, request }
+export {
+  API_BASE,
+  getLatestMockEmail,
+  parseResponseBody,
+  request,
+  shouldExposeLocalMockEmailCode,
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   batchDeletePredictions,
   deletePrediction,
@@ -19,6 +19,17 @@ export default function HistoryPage() {
   const [detail, setDetail] = useState<HistoryDetail | null>(null)
   const [selected, setSelected] = useState<Set<number | string>>(new Set())
   const { confirm, showToast } = useFeedback()
+  const currentRecordIds = useMemo(
+    () => records
+      .map((record) => record.id)
+      .filter((id): id is number | string => id !== undefined && id !== null),
+    [records],
+  )
+  const currentRecordIdSet = useMemo(() => new Set(currentRecordIds), [currentRecordIds])
+  const visibleSelected = useMemo(
+    () => new Set([...selected].filter((id) => currentRecordIdSet.has(id))),
+    [currentRecordIdSet, selected],
+  )
 
   const load = async (targetPage = page, targetStart = startDate, targetEnd = endDate) => {
     const data = await getPredictions(targetPage, targetStart, targetEnd)
@@ -63,44 +74,64 @@ export default function HistoryPage() {
   }
 
   const toggle = (id: number | string) => {
-    const next = new Set(selected)
-    if (next.has(id)) {
-      next.delete(id)
-    } else {
-      next.add(id)
-    }
-    setSelected(next)
+    setSelected((previous) => {
+      const next = new Set([...previous].filter((item) => currentRecordIdSet.has(item)))
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
-  const allSelected = records.length > 0 && records.every((record) => selected.has(record.id ?? ''))
+  const allSelected = records.length > 0 && records.every((record) => visibleSelected.has(record.id ?? ''))
   const hasDateFilter = Boolean(startDate || endDate)
 
   const toggleAll = () => {
     if (allSelected) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(records.map((record) => record.id!).filter(Boolean)))
+      setSelected(new Set(currentRecordIds))
     }
   }
 
   const clearFilters = () => {
+    setSelected(new Set())
     setStartDate('')
     setEndDate('')
     setPage(1)
   }
 
+  const updateStartDate = (value: string) => {
+    setSelected(new Set())
+    setStartDate(value)
+    setPage(1)
+  }
+
+  const updateEndDate = (value: string) => {
+    setSelected(new Set())
+    setEndDate(value)
+    setPage(1)
+  }
+
+  const changePage = (nextPage: number) => {
+    setSelected(new Set())
+    setPage(nextPage)
+  }
+
   const handleBatchDelete = async () => {
     const ok = await confirm({
       title: '批量删除预测记录',
-      message: `确定删除选中的 ${selected.size} 条记录？`,
+      message: `确定删除选中的 ${visibleSelected.size} 条记录？`,
       confirmText: '确认删除',
       danger: true,
     })
     if (!ok) return
 
     try {
-      await batchDeletePredictions([...selected])
-      if (detail?.id !== undefined && selected.has(detail.id)) setDetail(null)
+      await batchDeletePredictions([...visibleSelected])
+      if (detail?.id !== undefined && visibleSelected.has(detail.id)) setDetail(null)
       setSelected(new Set())
       await load()
       showToast('批量删除成功', 'success')
@@ -129,9 +160,9 @@ export default function HistoryPage() {
         endDate={endDate}
         hasDateFilter={hasDateFilter}
         allSelected={allSelected}
-        selectedCount={selected.size}
-        onStartDateChange={(value) => { setStartDate(value); setPage(1) }}
-        onEndDateChange={(value) => { setEndDate(value); setPage(1) }}
+        selectedCount={visibleSelected.size}
+        onStartDateChange={updateStartDate}
+        onEndDateChange={updateEndDate}
         onClearFilters={clearFilters}
         onToggleAll={toggleAll}
         onBatchDelete={handleBatchDelete}
@@ -142,11 +173,11 @@ export default function HistoryPage() {
         records={records}
         page={page}
         totalPages={totalPages}
-        selected={selected}
+        selected={visibleSelected}
         onToggle={toggle}
         onOpenDetail={setDetail}
         onDelete={handleDelete}
-        onPageChange={setPage}
+        onPageChange={changePage}
       />
       {detail && <HistoryDetailPanel detail={detail} onClose={() => setDetail(null)} />}
     </div>

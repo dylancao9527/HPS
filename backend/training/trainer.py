@@ -108,6 +108,8 @@ class TuningStrategy(Protocol):
         categorical_features: list,
         random_seed: int,
         learning_rate: float = 0.05,
+        max_boost_rounds: int = MAX_BOOST_ROUNDS,
+        early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
     ) -> ParameterSet: ...
 
 
@@ -119,11 +121,15 @@ class LightGBMTunerCVStrategy:
         categorical_features,
         random_seed: int = SEED,
         learning_rate: float = 0.05,
+        max_boost_rounds: int = MAX_BOOST_ROUNDS,
+        early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
         verbose: bool = True,
     ) -> ParameterSet:
         return tune_lightgbm_with_tuner_cv(
             X_train, y_train, categorical_features,
             random_seed=random_seed, learning_rate=learning_rate,
+            max_boost_rounds=max_boost_rounds,
+            early_stopping_rounds=early_stopping_rounds,
             verbose=verbose,
         )
 
@@ -136,7 +142,10 @@ class NoOpTuningStrategy:
         categorical_features,
         random_seed: int,
         learning_rate: float = 0.05,
+        max_boost_rounds: int = MAX_BOOST_ROUNDS,
+        early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
     ) -> ParameterSet:
+        _ = max_boost_rounds, early_stopping_rounds
         scale_pos_weight = _calculate_scale_pos_weight(y_train)
         params = {
             "objective": "binary",
@@ -420,6 +429,8 @@ def tune_lightgbm_with_tuner_cv(
     categorical_features,
     random_seed: int = SEED,
     learning_rate: float = 0.05,
+    max_boost_rounds: int = MAX_BOOST_ROUNDS,
+    early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
     verbose: bool = True,
 ):
     from optuna_integration.lightgbm import LightGBMTunerCV
@@ -454,9 +465,9 @@ def tune_lightgbm_with_tuner_cv(
         params=params,
         train_set=train_data,
         folds=folds,
-        num_boost_round=MAX_BOOST_ROUNDS,
+        num_boost_round=max_boost_rounds,
         callbacks=[
-            lgb.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS, verbose=False),
+            lgb.early_stopping(stopping_rounds=early_stopping_rounds, verbose=False),
             lgb.log_evaluation(period=0),
         ],
         seed=random_seed,

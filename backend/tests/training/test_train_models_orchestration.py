@@ -85,7 +85,10 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
             def tune(
                 self, X_train, y_train, categorical_features,
                 random_seed, learning_rate=0.05,
+                max_boost_rounds=1000,
+                early_stopping_rounds=50,
             ):
+                _ = max_boost_rounds, early_stopping_rounds
                 calls.append(("tune", random_seed))
                 return SimpleNamespace(
                     params={"objective": "binary"},
@@ -290,7 +293,10 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
         def tune(
             self, X_train, y_train, categorical_features,
             random_seed, learning_rate=0.05,
+            max_boost_rounds=1000,
+            early_stopping_rounds=50,
         ):
+            _ = max_boost_rounds, early_stopping_rounds
             captured["learning_rate"] = learning_rate
             return SimpleNamespace(
                 params={"objective": "binary"},
@@ -365,3 +371,85 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
     assert captured["multi_seed_args"] == ((11, 13), config)
     assert captured["save_model_kwargs"]["threshold_search_mode"] == "f1"
     assert captured["save_model_kwargs"]["threshold_min_recall"] == 0.55
+
+
+def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
+    calls = []
+    captured = {}
+
+    def fake_prepare_lgbm_data(random_seed, bp_meds_policy, label_mode):
+        return (
+            ["x1", "x2"],
+            [0, 1],
+            ["age", "bmi"],
+            ["bp_meds"],
+            {
+                "bp_meds_policy": bp_meds_policy,
+                "label_mode": label_mode,
+                "dataset_hash": "hash-boosting-window",
+            },
+        )
+
+    class FakeStrategy:
+        def tune(
+            self,
+            X_train,
+            y_train,
+            categorical_features,
+            random_seed,
+            learning_rate=0.05,
+            max_boost_rounds=1000,
+            early_stopping_rounds=50,
+        ):
+            captured["tuning_window"] = (
+                max_boost_rounds,
+                early_stopping_rounds,
+            )
+            return SimpleNamespace(
+                params={"objective": "binary"},
+                cv_auc=0.91,
+                best_iteration=12,
+                tuner_name="LightGBMTunerCV",
+                n_splits=5,
+                scale_pos_weight=1.0,
+                official_tuning=True,
+                to_dict=lambda: {},
+            )
+
+    monkeypatch.setattr(pipeline, "prepare_lgbm_data", fake_prepare_lgbm_data)
+    monkeypatch.setattr(
+        pipeline,
+        "split_train_test",
+        lambda X, y, random_seed, test_size: (["x-train"], ["x-test"], [1], [0]),
+    )
+    monkeypatch.setattr(pipeline, "LightGBMTrainer", _make_fake_trainer_class(calls))
+    monkeypatch.setattr(
+        pipeline,
+        "apply_missing_value_strategy",
+        lambda X_fit, named_frames, strategy="native": (
+            named_frames.copy(),
+            None,
+            strategy,
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "find_best_threshold",
+        lambda *args, **kwargs: {
+            "threshold": 0.42,
+            "precision": 0.89,
+            "recall": 0.85,
+            "f1": 0.87,
+        },
+    )
+    monkeypatch.setattr(pipeline, "save_final_model", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "save_training_meta", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "generate_report", lambda *args, **kwargs: None)
+
+    pipeline.run_training(
+        random_seed=7,
+        tuning_strategy=FakeStrategy(),
+        config=TrainingConfig(max_boost_rounds=345, early_stopping_rounds=23),
+    )
+
+    assert captured["tuning_window"] == (345, 23)

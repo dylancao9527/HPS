@@ -64,3 +64,24 @@ def test_prepare_lgbm_data_uses_runtime_label_and_bp_meds_policy(monkeypatch, tm
         "diagnosis": 1,
     }
     assert 1 in set(X["BPMeds"].astype("Int64").dropna().astype(int))
+
+
+def test_dataset_hash_is_stable_across_training_seed(monkeypatch, tmp_path):
+    (tmp_path / BASE_TRAINING_DATASET).write_text(
+        "\n".join(
+            [
+                "male,age,currentSmoker,cigsPerDay,BPMeds,diabetes,totChol,sysBP,diaBP,BMI,heartRate,glucose,Risk",
+                "1,56,0,0,1,0,210,142,91,27.3,78,105,1",
+                "0,43,0,0,0,0,188,118,76,22.5,72,92,0",
+                "1,66,1,5,1,0,220,150,95,28.1,80,110,1",
+                "0,48,0,0,0,0,190,120,78,23.0,70,90,0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(data, "DATASETS_DIR", tmp_path)
+
+    _, _, _, _, seed_7_summary = data.prepare_lgbm_data(random_seed=7)
+    _, _, _, _, seed_99_summary = data.prepare_lgbm_data(random_seed=99)
+
+    assert seed_7_summary["dataset_hash"] == seed_99_summary["dataset_hash"]

@@ -136,6 +136,11 @@ def _build_dataset_hash(merged: pd.DataFrame) -> str:
     hash_frame = merged[_HASH_COLUMNS].copy()
     for col in MODEL_CATEGORICAL_FEATURES:
         hash_frame[col] = hash_frame[col].astype("Int64")
+    hash_frame = hash_frame.sort_values(
+        by=_HASH_COLUMNS,
+        kind="mergesort",
+        na_position="last",
+    ).reset_index(drop=True)
     payload = json.dumps(
         hash_frame.to_dict(orient="records"),
         ensure_ascii=False,
