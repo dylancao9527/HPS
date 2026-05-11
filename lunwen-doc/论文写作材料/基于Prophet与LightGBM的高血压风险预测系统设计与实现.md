@@ -16,7 +16,7 @@ The short-term risks of hypertension are often hidden in daily blood pressure fl
 
 The system employs a dual-model cascaded architecture: first, Prophet models the user's recent blood pressure sequences to forecast the trend for the next week; then, the predicted blood pressure features, along with the user's physiological profile, are fed into a LightGBM classifier to calculate the final risk probability. Building on this, the system integrates medical guideline rules to generate a comprehensive report for the user, including risk levels, trend visualizations, and personalized suggestions.
 
-Experiments on the Framingham dataset show that the tuned LightGBM model achieves strong discrimination performance, with an AUC of 0.9480. Under the F1-oriented threshold strategy, the model reaches a recall of 0.8897 and an F1 score of 0.8494 while maintaining a precision of 0.8125. The comparison experiment indicates that tuning and threshold selection improve recall and balanced recognition in the health-risk assistance scenario. Feature analysis further confirms that the core indicators relied upon by the model align closely with clinical understanding. Functional testing demonstrates that the complete prediction pipeline, from profile entry to result governance, operates stably and provides reliable risk management support for users.
+Experiments on the Framingham dataset show that the tuned LightGBM model achieves strong discrimination performance, with an AUC of 0.9480. Under the F1-oriented threshold strategy, the model reaches a recall of 0.8897 and an F1 score of 0.8494 while maintaining a precision of 0.8125. The comparison experiment indicates that tuning and threshold selection improve recall and balanced recognition in the health-risk assistance scenario. Feature analysis shows that blood-pressure-related variables are the dominant signals in the classification model. Prophet backtesting and prediction-pipeline validation further indicate that the two models can form a closed loop from trend-feature generation to risk-probability output and result visualization.
 
 **Key words**: hypertension risk prediction; Prophet; LightGBM; time series forecasting; health management system
 
@@ -277,6 +277,24 @@ $$
 ![图4-3 Prophet-LightGBM 双模型预测链路图](./thesis-assets/diagrams/figure-4-3-prophet-lightgbm-pipeline.png)
 
 如图 4-3 所示，一次完整预测包括以下步骤。首先，用户完善风险因素档案并录入血压记录，系统校验档案最低完整性和血压记录自然日数量。随后，Prophet 基于每日血压序列生成未来 7 天收缩压和舒张压预测，系统计算预测期血压均值并写入 LightGBM 输入特征。LightGBM 输出原始风险概率后，风险融合模块根据趋势和用药信号调整概率，建议模块基于风险等级、血压分级、趋势方向、预测期高血压天数和置信度生成指南型健康建议。最后，系统保存预测记录并返回用户端预测摘要。
+
+为进一步明确两个模型之间的计算关系，本文将双模型联合算法概括如下。
+
+**算法4-1 Prophet-LightGBM 双模型高血压风险预测算法**
+
+| 步骤 | 操作 | 输出 |
+| --- | --- | --- |
+| 1 | 读取用户历史血压记录和个人风险因素 | `BP_history`、`X_risk` |
+| 2 | 按自然日聚合收缩压和舒张压记录 | 日均血压序列 |
+| 3 | 使用 Prophet 分别预测未来 7 天收缩压和舒张压 | 未来 7 天血压预测点 |
+| 4 | 计算预测期收缩压均值和舒张压均值 | `SBP_future`、`DBP_future` |
+| 5 | 将预测期血压特征与个人风险因素合并 | LightGBM 输入向量 |
+| 6 | 调用 LightGBM 风险分类模型 | 原始风险概率 `p_raw` |
+| 7 | 提取高血压天数比例、峰值和趋势方向 | 趋势融合信号 |
+| 8 | 根据趋势融合规则修正 `p_raw` | 融合风险概率 `p_fused` |
+| 9 | 将 `p_fused` 映射为风险等级并生成建议 | 风险等级和健康建议 |
+
+该算法体现了本文的核心设计：Prophet 的输出不是最终风险结论，而是 LightGBM 的动态血压输入；LightGBM 的输出也不是临床诊断结果，而是用于健康管理参考的风险概率。趋势融合模块只在概率层面做受约束的小幅修正，用于增强结果与近期血压走势之间的一致性。
 
 在融合前，系统先从 Prophet 的未来 7 天预测点中提取高血压天数比例和趋势斜率等信号：
 
