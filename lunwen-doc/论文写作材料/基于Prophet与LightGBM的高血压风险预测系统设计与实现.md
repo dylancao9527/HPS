@@ -2,21 +2,21 @@
 
 ## 摘要
 
-高血压的短期风险往往潜伏在日常血压波动中，但传统的健康管理系统大多停留在数据记录层面，缺乏对连续数据的深度挖掘与及时预警。为此，本文设计并实现了一套基于 Prophet 与 LightGBM 的高血压风险预测辅助系统。该系统以“防漏报”为核心策略，旨在为普通用户提供直观的未来 7 天健康管理参考。
+高血压风险并不总是在孤立测量结果中直接显现，更多时候隐藏在连续血压记录的波动和趋势里。现有健康管理系统通常重视数据录入和查询，对近期变化的解释和主动提醒仍显不足。围绕这一问题，本文设计并实现了基于 Prophet 与 LightGBM 的高血压风险预测辅助系统，用于把用户日常血压记录转化为更易理解的短期健康管理参考。
 
-系统采用双模型串联的预测架构：首先利用 Prophet 对用户的近期血压序列进行时序建模，预测未来一周的血压趋势；随后，将预测期内的血压特征与用户的基本生理档案输入 LightGBM 分类器，计算出最终的风险概率。在此基础上，系统结合医学指南规则，为用户生成包含风险等级、趋势图及个性化建议在内的综合报告。
+系统以 Prophet 与 LightGBM 的串联预测为核心。Prophet 根据用户近期血压序列生成未来趋势特征，LightGBM 再结合预测期血压特征和个人生理档案输出风险概率。系统在模型结果基础上引入医学指南规则，将风险等级、趋势图和个性化建议组织为综合报告，使普通用户能够从结果中看到风险来源和后续管理方向。
 
-基于 Framingham 数据集的实验表明，调优后的 LightGBM 模型具备较好的区分能力（AUC 达 0.9480），在最大化 F1 的阈值策略下 Recall 达到 0.8897、F1 达到 0.8494，同时 Precision 保持在 0.8125。对照实验说明，调参和阈值策略主要改善了风险提示场景中的查全率与综合识别效果。特征分析也证实，血压相关变量是模型判断的主要依据。Prophet 回测与预测链路验证表明，两个模型能够完成“趋势预测特征生成—风险概率输出—结果展示”的闭环。
+基于 Framingham 数据集的实验结果表明，调优后的 LightGBM 模型具备较好的风险区分能力，能够兼顾潜在风险识别与误报控制，较适合健康提醒场景。特征分析显示，血压相关变量是模型判断的重要依据，说明将 Prophet 预测得到的血压趋势接入 LightGBM 具有实际意义。Prophet 回测与系统链路验证也表明，该方法能够完成从趋势预测、风险分类到页面展示的完整流程。本文系统定位于健康管理辅助工具，预测结果用于提示用户关注近期血压变化和风险因素，不替代临床诊断与治疗决策。
 
 **关键词**：高血压风险预测；Prophet；LightGBM；时间序列预测；健康管理系统
 
 ## Abstract
 
-The short-term risks of hypertension are often hidden in daily blood pressure fluctuations. However, traditional health management systems largely remain at the data recording stage, lacking deep data mining and timely early warnings. To address this, this paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM. With a core strategy of minimizing missed warnings, the system aims to provide general users with intuitive health management references for the upcoming seven days.
+The short-term risk of hypertension is not always visible in a standalone measurement. It is more often reflected in the fluctuation and direction of continuous blood pressure records. Many existing health management systems focus on recording and querying data, while offering limited interpretation of recent changes or proactive reminders. To address this problem, this paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM, so that daily blood pressure records can be converted into more understandable short-term health management references.
 
-The system employs a dual-model cascaded architecture: first, Prophet models the user's recent blood pressure sequences to forecast the trend for the next week; then, the predicted blood pressure features, along with the user's physiological profile, are fed into a LightGBM classifier to calculate the final risk probability. Building on this, the system integrates medical guideline rules to generate a comprehensive report for the user, including risk levels, trend visualizations, and personalized suggestions.
+The system centers on a cascaded prediction process. Prophet is used to derive trend features from the user's recent blood pressure sequence, and LightGBM then combines these predicted blood pressure features with the user's physiological profile to estimate the risk probability. On top of the model output, the system introduces rule-based guidance from medical guidelines and organizes the result into a report containing risk level, trend visualization, and personalized suggestions. This design helps general users understand where the risk signal comes from and what kind of health management attention may be needed.
 
-Experiments on the Framingham dataset show that the tuned LightGBM model achieves strong discrimination performance, with an AUC of 0.9480. Under the F1-oriented threshold strategy, the model reaches a recall of 0.8897 and an F1 score of 0.8494 while maintaining a precision of 0.8125. The comparison experiment indicates that tuning and threshold selection improve recall and balanced recognition in the health-risk assistance scenario. Feature analysis shows that blood-pressure-related variables are the dominant signals in the classification model. Prophet backtesting and prediction-pipeline validation further indicate that the two models can form a closed loop from trend-feature generation to risk-probability output and result visualization.
+Experiments on the Framingham dataset indicate that the tuned LightGBM model has good discrimination ability and can identify potential risk while keeping unnecessary alerts under control, which suits the health-risk reminder scenario. Feature analysis shows that blood-pressure-related variables are important signals in the classification process, supporting the use of Prophet-derived trend features in LightGBM. Prophet backtesting and system pipeline validation further show that the proposed approach can connect trend forecasting, risk classification, and result presentation in a complete workflow. The system is positioned as an auxiliary health management tool; its output is intended to remind users to pay attention to recent blood pressure changes and risk factors, rather than to replace clinical diagnosis or treatment decisions.
 
 **Key words**: hypertension risk prediction; Prophet; LightGBM; time series forecasting; health management system
 
