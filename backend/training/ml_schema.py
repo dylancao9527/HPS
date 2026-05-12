@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 
-BASE_TRAINING_DATASET = "framingham.csv"
+BASE_TRAINING_DATASET = "Hypertension-risk-model-main.csv"
 EXPORT_DATASET = "training_data_export.csv"
 MODEL_SCHEMA_VERSION = 2
 

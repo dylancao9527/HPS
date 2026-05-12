@@ -14,7 +14,7 @@
 | 指标 | 数值 |
 |---|---|
 | 训练 Profile | raw_baseline |
-| 主数据集 | framingham.csv |
+| 主数据集 | Hypertension-risk-model-main.csv |
 | 主数据集样本数 | 4240 |
 | 主数据集正样本比例 | 31.1% |
 | 系统导出样本数 | 0 |
@@ -50,14 +50,14 @@
 
 | 指标 | Baseline | Tuned |
 |---|---|---|
-| Accuracy | 0.8903 | 0.9021 |
+| Accuracy | 0.8738 | 0.8797 |
 | AUC | 0.9464 | 0.9480 |
-| Precision | 0.7690 | 0.8125 |
-| Recall | 0.9240 | 0.8897 |
-| F1 | 0.8394 | 0.8494 |
+| Precision | 0.8391 | 0.8286 |
+| Recall | 0.7338 | 0.7719 |
+| F1 | 0.7830 | 0.7992 |
 | PR-AUC | 0.8688 | 0.8678 |
 | Brier Score | 0.0841 | 0.0829 |
-| Threshold | 0.47 | 0.67 |
+| Threshold | 0.79 | 0.77 |
 | Best Iteration | 76 | 65 |
 
 ### 概率校准
@@ -84,8 +84,8 @@
 - 参数策略：`LightGBMTunerCV official stepwise parameter tuning`
 - 交叉验证折数：`5`
 - 最优 CV AUC：`0.9527`
-- 阈值搜索策略：`f1`
-- Recall 下限：`None`
+- 阈值搜索策略：`recall_priority`
+- Recall 下限：`0.75`
 - 阈值候选数：`298`
 - 阈值集与 early stopping 隔离：`True`
 - best_iteration 来源：`early_stop_valid_refit`
@@ -110,10 +110,10 @@
 
 | 指标 | 数值 |
 |---|---|
-| TN | 531 |
-| FP | 54 |
-| FN | 29 |
-| TP | 234 |
+| TN | 543 |
+| FP | 42 |
+| FN | 60 |
+| TP | 203 |
 
 
 
@@ -154,7 +154,7 @@
 
 ## 八、训练与更新流程
 
-1. 主训练集使用 `framingham.csv`
+1. 主训练集使用 `Hypertension-risk-model-main.csv`
 2. 管理员可导出 `training_data_export.csv` 作为系统样本补充
 3. 运行 `cd backend && uv run python scripts/train_models.py`；如需显式控制随机性，可追加 `--seed <int>` 或 `--random-seed`
 4. 脚本自动合并主数据集与系统导出样本，并拆分出测试集、阈值验证集和 early-stopping 验证集
