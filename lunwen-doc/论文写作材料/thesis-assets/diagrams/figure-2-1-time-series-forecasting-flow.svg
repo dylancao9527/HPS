@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="260" viewBox="0 0 1600 260">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#4b5563"/>
+    </marker>
+    <style>
+      .box { rx: 10; ry: 10; stroke-width: 2.5; }
+      .title { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; font-size: 28px; font-weight: 700; fill: #1f2937; text-anchor: middle; }
+      .text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; font-size: 24px; fill: #111827; text-anchor: middle; }
+      .sub { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; font-size: 20px; fill: #4b5563; text-anchor: middle; }
+      .arrow { stroke: #4b5563; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="40" y="110" width="220" height="120" class="box" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="150" y="158" class="text">原始血压记录</text>
+  <text x="150" y="194" class="sub">SBP、DBP、心率、时间</text>
+
+  <path d="M260 170 H345" class="arrow"/>
+
+  <rect x="360" y="110" width="220" height="120" class="box" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="470" y="158" class="text">时间排序</text>
+  <text x="470" y="194" class="sub">形成观测序列</text>
+
+  <path d="M580 170 H665" class="arrow"/>
+
+  <rect x="680" y="110" width="220" height="120" class="box" fill="#fef3c7" stroke="#d97706"/>
+  <text x="790" y="158" class="text">自然日聚合</text>
+  <text x="790" y="194" class="sub">生成日均血压序列</text>
+
+  <path d="M900 170 H985" class="arrow"/>
+
+  <rect x="1000" y="110" width="220" height="120" class="box" fill="#ede9fe" stroke="#8b5cf6"/>
+  <text x="1110" y="158" class="text">趋势预测</text>
+  <text x="1110" y="194" class="sub">未来 7 天 SBP / DBP</text>
+
+  <path d="M1220 170 H1305" class="arrow"/>
+
+  <rect x="1320" y="110" width="220" height="120" class="box" fill="#ccfbf1" stroke="#0f766e"/>
+  <text x="1430" y="158" class="text">预测期特征</text>
+  <text x="1430" y="194" class="sub">输入 LightGBM</text>
+
+</svg>
