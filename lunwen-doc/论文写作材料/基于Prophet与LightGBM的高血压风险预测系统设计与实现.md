@@ -2,21 +2,21 @@
 
 ## 摘要
 
-高血压风险并不总是在孤立测量结果中直接显现，更多时候隐藏在连续血压记录的波动和趋势里。现有健康管理系统通常重视数据录入和查询，对近期变化的解释和主动提醒仍显不足。围绕这一问题，本文设计并实现了基于 Prophet 与 LightGBM 的高血压风险预测辅助系统，用于把用户日常血压记录转化为更易理解的短期健康管理参考。
+高血压是慢性病管理中的常见问题，用户在家庭血压计和健康平台中积累了大量连续血压记录，但这些数据往往只被用于保存和查询。现有健康管理系统对近期血压变化、短期风险提示和结果解释的支持仍不充分，难以帮助普通用户及时理解自身血压变化。
 
-系统以 Prophet 与 LightGBM 的串联预测为核心。Prophet 根据用户近期血压序列生成未来趋势特征，LightGBM 再结合预测期血压特征和个人生理档案输出风险概率。系统在模型结果基础上引入医学指南规则，将风险等级、趋势图和个性化建议组织为综合报告，使普通用户能够从结果中看到风险来源和后续管理方向。
+针对上述问题，本文设计并实现了一套基于 Prophet 与 LightGBM 的高血压风险预测辅助系统。系统先将用户血压记录按自然日聚合，并利用 Prophet 预测未来 7 天血压趋势，再将预测期血压特征与用户风险因素输入 LightGBM，得到高血压风险概率和风险等级。
 
-基于公开健康检查数据文件的实验结果表明，调优后的 LightGBM 模型具备较好的风险区分能力，能够兼顾潜在风险识别与误报控制，较适合健康提醒场景。特征分析显示，血压相关变量是模型判断的重要依据，说明将 Prophet 预测得到的血压趋势接入 LightGBM 具有实际意义。Prophet 回测与系统链路验证也表明，该方法能够完成从趋势预测、风险分类到页面展示的完整流程。本文系统定位于健康管理辅助工具，预测结果用于提示用户关注近期血压变化和风险因素，不替代临床诊断与治疗决策。
+实验结果表明，调参后的 LightGBM 模型在公开健康检查数据集上具有较好的分类效果，血压相关特征是影响模型判断的主要因素。系统链路验证表明，本文方法能够完成从血压趋势预测、风险分类到结果展示的完整流程，可为用户提供短期健康管理参考，但不能替代临床诊断和治疗决策。
 
 **关键词**：高血压风险预测；Prophet；LightGBM；时间序列预测；健康管理系统
 
 ## Abstract
 
-The short-term risk of hypertension is not always visible in a standalone measurement. It is more often reflected in the fluctuation and direction of continuous blood pressure records. Many existing health management systems focus on recording and querying data, while offering limited interpretation of recent changes or proactive reminders. To address this problem, this paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM, so that daily blood pressure records can be converted into more understandable short-term health management references.
+Hypertension is a common issue in chronic disease management, and users now accumulate continuous blood pressure records through home monitors and health platforms. However, these records are often used only for storage and query, while recent trend interpretation, short-term risk reminders, and result explanation remain insufficient.
 
-The system centers on a cascaded prediction process. Prophet is used to derive trend features from the user's recent blood pressure sequence, and LightGBM then combines these predicted blood pressure features with the user's physiological profile to estimate the risk probability. On top of the model output, the system introduces rule-based guidance from medical guidelines and organizes the result into a report containing risk level, trend visualization, and personalized suggestions. This design helps general users understand where the risk signal comes from and what kind of health management attention may be needed.
+To address this problem, this paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM. The system first aggregates user blood pressure records by natural day and uses Prophet to predict the blood pressure trend for the next seven days; it then feeds the predicted blood pressure features and user risk factors into LightGBM to obtain the risk probability and risk level.
 
-Experiments on a public health-check dataset indicate that the tuned LightGBM model has good discrimination ability and can identify potential risk while keeping unnecessary alerts under control, which suits the health-risk reminder scenario. Feature analysis shows that blood-pressure-related variables are important signals in the classification process, supporting the use of Prophet-derived trend features in LightGBM. Prophet backtesting and system pipeline validation further show that the proposed approach can connect trend forecasting, risk classification, and result presentation in a complete workflow. The system is positioned as an auxiliary health management tool; its output is intended to remind users to pay attention to recent blood pressure changes and risk factors, rather than to replace clinical diagnosis or treatment decisions.
+Experimental results on a public health-check dataset show that the tuned LightGBM model achieves good classification performance, and blood-pressure-related features are the main factors affecting the model output. System pipeline validation shows that the proposed method can complete the workflow from blood pressure trend prediction and risk classification to result presentation, providing short-term health management references for users without replacing clinical diagnosis or treatment decisions.
 
 **Key words**: hypertension risk prediction; Prophet; LightGBM; time series forecasting; health management system
 
@@ -68,17 +68,15 @@ Prophet 原始论文提出了面向大规模预测任务的加性模型框架，
 
 Prophet 是一种面向时间序列预测的加性模型，适合处理存在趋势、周期和异常波动的数据。其基本思想是把时间序列拆分为趋势、周期、事件影响和随机误差等可解释成分。基本形式可以表示为：
 
-$$
-y(t)=g(t)+s(t)+h(t)+\epsilon_t
-\tag{2-1}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle y(t)=g(t)+s(t)+h(t)+\epsilon_t$ | (1) |
 
 其中，$g(t)$ 表示趋势项，用于描述时间序列整体变化方向；$s(t)$ 表示季节性或周期项；$h(t)$ 表示节假日或特殊事件项；$\epsilon_t$ 表示误差项[14]。对于存在突变点的序列，Prophet 可用分段趋势表达不同阶段的变化速度，线性趋势项可抽象为：
 
-$$
-g(t)=(k+a(t)^{T}\delta)t+(m+a(t)^{T}\gamma)
-\tag{2-2}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle g(t)=(k+a(t)^{T}\delta)t+(m+a(t)^{T}\gamma)$ | (2) |
 
 式中，$k$ 为基础增长率，$m$ 为偏置项，$a(t)$ 表示时间 $t$ 是否经过候选变化点的指示向量，$\delta$ 表示变化点前后趋势斜率的调整量，$\gamma$ 用于保证趋势函数在变化点处连续。在本文场景中，血压预测主要关注用户个人近期血压变化，因此系统重点使用趋势建模能力，不把 Prophet 输出解释为临床结论。
 
@@ -94,24 +92,21 @@ Prophet 的优点在于模型结构较清晰，预测输出可以同时给出未
 
 LightGBM 是一种高效的梯度提升决策树模型，适用于结构化表格数据分类与回归任务。梯度提升决策树通过多棵弱学习器逐步拟合损失函数的负梯度，最终形成加法模型。第 $M$ 轮后的模型可以表示为：
 
-$$
-F_M(x)=\sum_{m=1}^{M} f_m(x)
-\tag{2-3}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle F_M(x)=\sum_{m=1}^{M} f_m(x)$ | (3) |
 
 其中，$x$ 表示输入特征，$f_m(x)$ 表示第 $m$ 棵决策树，$M$ 表示树的数量。LightGBM 在每轮训练时最小化损失函数与模型复杂度惩罚之和，其目标函数可写为：
 
-$$
-\mathcal{L}^{(m)}=\sum_{i=1}^{N}l(y_i,\hat{y}^{(m-1)}_i+f_m(x_i))+\Omega(f_m)
-\tag{2-4}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle \mathcal{L}^{(m)}=\sum_{i=1}^{N}l(y_i,\hat{y}^{(m-1)}_i+f_m(x_i))+\Omega(f_m)$ | (4) |
 
 式中，$l$ 表示样本损失函数，$\Omega(f_m)$ 表示树模型复杂度惩罚项。经过二阶泰勒展开后，每个叶子节点的最优权重与该叶子上样本的一阶梯度和二阶梯度有关：
 
-$$
-w_j^{*}=-\frac{G_j}{H_j+\lambda}
-\tag{2-5}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle w_j^{*}=-\frac{G_j}{H_j+\lambda}$ | (5) |
 
 其中，$G_j$ 和 $H_j$ 分别表示第 $j$ 个叶子节点上一阶梯度和二阶梯度之和，$\lambda$ 为正则化系数。
 
@@ -121,10 +116,9 @@ $$
 
 对于二分类任务，模型输出可以经过 Sigmoid 变换得到属于正类的概率：
 
-$$
-p=P(y=1|x)=\frac{1}{1+e^{-F_M(x)}}
-\tag{2-6}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle p=P(y=1\mid x)=\frac{1}{1+e^{-F_M(x)}}$ | (6) |
 
 图 2-3 给出了 Sigmoid 函数的概率映射曲线。当模型分数 $F_M(x)$ 较小时，输出概率接近低风险一侧；当模型分数逐渐增大时，风险概率随之上升。该曲线说明 LightGBM 的最终输出不是简单的类别标签，而是可用于阈值搜索、风险分级和趋势融合的概率值。
 
@@ -177,29 +171,25 @@ LightGBM 相比普通 GBDT 具有训练效率高、对大规模特征和样本�
 
 对于用户实时预测，系统首先将原始血压记录按自然日聚合。若用户在同一天录入多条记录，则分别计算该日收缩压和舒张压均值：
 
-$$
-\overline{SBP}_d=\frac{1}{n_d}\sum_{i=1}^{n_d}SBP_{d,i}
-\tag{3-1}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle \overline{SBP}_d=\frac{1}{n_d}\sum_{i=1}^{n_d}SBP_{d,i}$ | (7) |
 
-$$
-\overline{DBP}_d=\frac{1}{n_d}\sum_{i=1}^{n_d}DBP_{d,i}
-\tag{3-2}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle \overline{DBP}_d=\frac{1}{n_d}\sum_{i=1}^{n_d}DBP_{d,i}$ | (8) |
 
 其中，$n_d$ 表示第 $d$ 天的血压记录数量，$SBP_{d,i}$ 和 $DBP_{d,i}$ 分别表示第 $d$ 天第 $i$ 条记录中的收缩压和舒张压。聚合后的每日血压序列作为 Prophet 的训练输入。
 
 Prophet 输出未来 7 天收缩压和舒张压预测值后，系统进一步构造预测期血压特征：
 
-$$
-SBP_{future}=\frac{1}{7}\sum_{k=1}^{7}\widehat{SBP}_{t+k}
-\tag{3-3}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle SBP_{future}=\frac{1}{7}\sum_{k=1}^{7}\widehat{SBP}_{t+k}$ | (9) |
 
-$$
-DBP_{future}=\frac{1}{7}\sum_{k=1}^{7}\widehat{DBP}_{t+k}
-\tag{3-4}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle DBP_{future}=\frac{1}{7}\sum_{k=1}^{7}\widehat{DBP}_{t+k}$ | (10) |
 
 其中，$\widehat{SBP}_{t+k}$ 和 $\widehat{DBP}_{t+k}$ 表示 Prophet 对未来第 $k$ 天收缩压和舒张压的预测值。构造后的 $SBP_{future}$ 和 $DBP_{future}$ 分别映射到 LightGBM 的 `sysBP` 和 `diaBP` 特征。
 
@@ -207,38 +197,33 @@ $$
 
 本文使用 Accuracy、Precision、Recall、F1、AUC、PR-AUC、Brier Score 和混淆矩阵评价 LightGBM 风险分类模型。设 TP 表示正类预测正确数量，TN 表示负类预测正确数量，FP 表示负类被误判为正类数量，FN 表示正类被误判为负类数量，则 Accuracy 表示总体预测正确比例：
 
-$$
-Accuracy=\frac{TP+TN}{TP+TN+FP+FN}
-\tag{3-5}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle Accuracy=\frac{TP+TN}{TP+TN+FP+FN}$ | (11) |
 
 Precision 表示预测为正类的样本中真实正类比例：
 
-$$
-Precision=\frac{TP}{TP+FP}
-\tag{3-6}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle Precision=\frac{TP}{TP+FP}$ | (12) |
 
 Recall 表示真实正类样本被模型识别出的比例：
 
-$$
-Recall=\frac{TP}{TP+FN}
-\tag{3-7}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle Recall=\frac{TP}{TP+FN}$ | (13) |
 
 F1 值是 Precision 与 Recall 的调和平均：
 
-$$
-F1=\frac{2\times Precision\times Recall}{Precision+Recall}
-\tag{3-8}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle F1=\frac{2\times Precision\times Recall}{Precision+Recall}$ | (14) |
 
 AUC 衡量模型在不同分类阈值下对正负样本的区分能力，PR-AUC 衡量 Precision-Recall 曲线下的面积，适合观察正类识别效果。Brier Score 衡量概率预测与真实标签之间的均方误差，其值越小，说明概率输出越接近真实标签：
 
-$$
-Brier=\frac{1}{N}\sum_{i=1}^{N}(p_i-y_i)^2
-\tag{3-9}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle Brier=\frac{1}{N}\sum_{i=1}^{N}(p_i-y_i)^2$ | (15) |
 
 其中，$p_i$ 表示第 $i$ 个样本的预测概率，$y_i$ 表示真实标签。本文除关注 AUC 等区分指标外，也保留 Brier Score，用于观察风险概率输出的校准程度。
 
@@ -256,10 +241,9 @@ $$
 
 如图 4-1 所示，Prophet 预测流程包括血压记录读取、自然日聚合、训练上下文构造、模型复用或重训判断、未来 7 天预测和预测说明生成。系统默认最多使用近期 90 天日均血压数据参与 Prophet 训练，以避免过长历史数据对近期趋势造成干扰，同时控制预测响应时间。Prophet 输出的预测点首先被转换为预测期血压特征：
 
-$$
-X_{bp}^{future}=\left[\frac{1}{7}\sum_{k=1}^{7}\widehat{SBP}_{t+k},\frac{1}{7}\sum_{k=1}^{7}\widehat{DBP}_{t+k}\right]
-\tag{4-1}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle X_{bp}^{future}=\left[\frac{1}{7}\sum_{k=1}^{7}\widehat{SBP}_{t+k},\frac{1}{7}\sum_{k=1}^{7}\widehat{DBP}_{t+k}\right]$ | (16) |
 
 式中，$X_{bp}^{future}$ 表示 LightGBM 所需的未来 7 天血压特征，$\widehat{SBP}_{t+k}$ 与 $\widehat{DBP}_{t+k}$ 分别表示 Prophet 对未来第 $k$ 天收缩压和舒张压的预测值。这样处理后，系统输入 LightGBM 的血压变量不再是单次测量值，而是带有短期趋势信息的预测期均值。
 
@@ -275,14 +259,9 @@ LightGBM 风险分类模块接收用户个人风险因素和 Prophet 预测期�
 
 如图 4-2 所示，LightGBM 输入特征分为两类。第一类是静态或相对稳定的用户风险因素，如年龄、性别、BMI、吸烟、用药、糖尿病、总胆固醇和血糖。第二类是预测期血压特征，即 Prophet 对未来 7 天收缩压和舒张压预测值的均值。为便于书写，先将这些字段合并记为 LightGBM 输入向量，再表示模型输出的原始风险概率：
 
-$$
-\begin{aligned}
-\mathbf{x}_{LGBM}=&(male,age,smoker,cigsPerDay,BPMeds,diabetes,\\
-&totChol,SBP_{future},DBP_{future},BMI,heartRate,glucose),\\
-p_{raw}=&F_{LGBM}(\mathbf{x}_{LGBM})
-\end{aligned}
-\tag{4-2}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle \begin{aligned} \mathbf{x}_{LGBM}=&(male,age,smoker,cigsPerDay,BPMeds,diabetes,\\ &totChol,SBP_{future},DBP_{future},BMI,heartRate,glucose),\\ p_{raw}=&F_{LGBM}(\mathbf{x}_{LGBM}) \end{aligned}$ | (17) |
 
 其中，$\mathbf{x}_{LGBM}$ 表示输入 LightGBM 的特征向量，$F_{LGBM}$ 表示训练完成的 LightGBM 分类器，$p_{raw}$ 表示未经过趋势融合的高血压风险概率。系统再结合趋势方向、高血压天数、趋势斜率、波动程度和用药信号进行工程融合，得到最终展示的风险概率。
 
@@ -304,41 +283,31 @@ $$
 
 在融合前，系统先从 Prophet 的未来 7 天预测点中提取高血压天数比例和趋势斜率等信号：
 
-$$
-r_{high}=\frac{1}{7}\sum_{k=1}^{7}\mathbb{I}(\widehat{SBP}_{t+k}\ge140\ \text{or}\ \widehat{DBP}_{t+k}\ge90)
-\tag{4-3}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle r_{high}=\frac{1}{7}\sum_{k=1}^{7}\mathbb{I}(\widehat{SBP}_{t+k}\ge140\ \text{or}\ \widehat{DBP}_{t+k}\ge90)$ | (18) |
 
-$$
-s_{SBP}=\widehat{SBP}_{t+7}-\widehat{SBP}_{t+1},\quad s_{DBP}=\widehat{DBP}_{t+7}-\widehat{DBP}_{t+1}
-\tag{4-4}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle s_{SBP}=\widehat{SBP}_{t+7}-\widehat{SBP}_{t+1},\quad s_{DBP}=\widehat{DBP}_{t+7}-\widehat{DBP}_{t+1}$ | (19) |
 
 其中，$r_{high}$ 表示预测期内达到高血压阈值的天数比例，$s_{SBP}$ 和 $s_{DBP}$ 分别表示 7 天预测期内收缩压和舒张压的首尾变化量。趋势融合的调整项可以概括为：
 
-$$
-\Delta_{trend}=\min(0.08,0.08r_{high})+0.02I_{peak}+0.02I_{up}-0.02I_{stable}
-\tag{4-5}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle \Delta_{trend}=\min(0.08,0.08r_{high})+0.02I_{peak}+0.02I_{up}-0.02I_{stable}$ | (20) |
 
 式中，$I_{peak}$ 表示预测期是否出现收缩压不低于 150 mmHg 或舒张压不低于 95 mmHg 的峰值，$I_{up}$ 表示预测期是否存在明显上升趋势，$I_{stable}$ 表示是否为稳定低血压趋势。若用户正在服用降压药但预测期仍出现高血压或峰值血压，系统额外引入 $\Delta_{med}=0.02$ 的用药未控制修正项。最终融合概率为：
 
-$$
-p_{fused}=clip(p_{raw}+\Delta_{trend}+\Delta_{med},0.01,0.99)
-\tag{4-6}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle p_{fused}=clip(p_{raw}+\Delta_{trend}+\Delta_{med},0.01,0.99)$ | (21) |
 
 其中，$p_{raw}$ 表示 LightGBM 原始概率，$\Delta_{trend}$ 表示趋势相关调整量，$\Delta_{med}$ 表示用药相关调整量，`clip` 表示将概率限制在合理区间内。风险等级映射规则为：
 
-$$
-Level(p)=
-\begin{cases}
-低风险,&p<0.30\\
-中风险,&0.30\le p<0.60\\
-高风险,&p\ge0.60
-\end{cases}
-\tag{4-7}
-$$
+|  |  |
+|:---:|---:|
+| $\displaystyle Level(p)= \begin{cases} 低风险,&p<0.30\\ 中风险,&0.30\le p<0.60\\ 高风险,&p\ge0.60 \end{cases}$ | (22) |
 
 上述公式是工程融合策略的抽象表达，用于解释系统如何综合模型输出和趋势信号，不表示临床风险模型。融合策略的设计边界是“小幅修正”：它不替代 LightGBM 分类器，只在模型概率基础上加入可解释的血压趋势信号，使最终展示结果更贴近用户近期血压变化。
 
