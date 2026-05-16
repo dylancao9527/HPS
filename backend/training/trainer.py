@@ -110,6 +110,7 @@ class TuningStrategy(Protocol):
         learning_rate: float = 0.05,
         max_boost_rounds: int = MAX_BOOST_ROUNDS,
         early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
+        cv_splits: int = CV_SPLITS,
     ) -> ParameterSet: ...
 
 
@@ -123,6 +124,7 @@ class LightGBMTunerCVStrategy:
         learning_rate: float = 0.05,
         max_boost_rounds: int = MAX_BOOST_ROUNDS,
         early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
+        cv_splits: int = CV_SPLITS,
         verbose: bool = True,
     ) -> ParameterSet:
         return tune_lightgbm_with_tuner_cv(
@@ -130,6 +132,7 @@ class LightGBMTunerCVStrategy:
             random_seed=random_seed, learning_rate=learning_rate,
             max_boost_rounds=max_boost_rounds,
             early_stopping_rounds=early_stopping_rounds,
+            cv_splits=cv_splits,
             verbose=verbose,
         )
 
@@ -144,8 +147,9 @@ class NoOpTuningStrategy:
         learning_rate: float = 0.05,
         max_boost_rounds: int = MAX_BOOST_ROUNDS,
         early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
+        cv_splits: int = CV_SPLITS,
     ) -> ParameterSet:
-        _ = max_boost_rounds, early_stopping_rounds
+        _ = max_boost_rounds, early_stopping_rounds, cv_splits
         scale_pos_weight = _calculate_scale_pos_weight(y_train)
         params = {
             "objective": "binary",
@@ -388,7 +392,9 @@ def _build_lightgbm_tuner_params(y_train, random_seed: int = SEED, learning_rate
     }, scale_pos_weight
 
 
-def _build_official_tuning_summary(params, tuner, best_booster, scale_pos_weight) -> ParameterSet:
+def _build_official_tuning_summary(
+    params, tuner, best_booster, scale_pos_weight, n_splits: int = CV_SPLITS
+) -> ParameterSet:
     best_params = {
         **params,
         **tuner.best_params,
@@ -399,7 +405,7 @@ def _build_official_tuning_summary(params, tuner, best_booster, scale_pos_weight
         cv_auc=round(float(tuner.best_score), 4),
         best_iteration=getattr(best_booster, "best_iteration", None),
         tuner_name="LightGBMTunerCV",
-        n_splits=CV_SPLITS,
+        n_splits=n_splits,
         scale_pos_weight=scale_pos_weight,
         official_tuning=True,
         tuning_notes="LightGBMTunerCV official stepwise parameter tuning",
@@ -431,6 +437,7 @@ def tune_lightgbm_with_tuner_cv(
     learning_rate: float = 0.05,
     max_boost_rounds: int = MAX_BOOST_ROUNDS,
     early_stopping_rounds: int = EARLY_STOPPING_ROUNDS,
+    cv_splits: int = CV_SPLITS,
     verbose: bool = True,
 ):
     from optuna_integration.lightgbm import LightGBMTunerCV
@@ -441,7 +448,7 @@ def tune_lightgbm_with_tuner_cv(
 
     _log(
         verbose,
-        f"  调参输入：rows={len(X_train)}，cv={CV_SPLITS} 折，"
+        f"  调参输入：rows={len(X_train)}，cv={cv_splits} 折，"
         f"categorical={categorical_features}",
     )
     _log(
@@ -460,7 +467,7 @@ def tune_lightgbm_with_tuner_cv(
         categorical_feature=categorical_features,
         free_raw_data=False,
     )
-    folds = StratifiedKFold(n_splits=CV_SPLITS, shuffle=True, random_state=random_seed)
+    folds = StratifiedKFold(n_splits=cv_splits, shuffle=True, random_state=random_seed)
     tuner = LightGBMTunerCV(
         params=params,
         train_set=train_data,
@@ -483,6 +490,7 @@ def tune_lightgbm_with_tuner_cv(
         tuner,
         best_booster,
         scale_pos_weight,
+        n_splits=cv_splits,
     )
 
     _log(verbose, f"\n  最优 CV AUC: {summary.cv_auc:.4f}")

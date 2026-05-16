@@ -1,7 +1,7 @@
 # 训练对照实验报告
 
-- Baseline 结果: `baseline_result.json`
-- Experiment 结果: `experiment_result.json`
+- Baseline 结果: `D:\projects\HPS\backend\ml_runs\20260516-225844-baseline-recall`
+- Experiment 结果: `D:\projects\HPS\backend\ml_runs\20260516-225919-experiment-f1`
 
 ## 一、参数差异
 
@@ -14,7 +14,7 @@
 
 | 项目 | Baseline | Experiment |
 |---|---|---|
-| 数据集 | framingham.csv | framingham.csv |
+| 数据集 | Hypertension-risk-model-main.csv | Hypertension-risk-model-main.csv |
 | 样本数 | 4240 | 4240 |
 | 正样本比例 | 31.1% | 31.1% |
 

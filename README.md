@@ -279,29 +279,37 @@ uv run python scripts/train_models.py --seed 7
 uv run python scripts/train_models.py --random-seed
 uv run python scripts/train_models.py --save-params scripts/experiments/baseline.json
 uv run python scripts/train_models.py --params scripts/experiments/baseline.json
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
 ```
+
+不带 `--run-name` 时，训练会更新 `backend/ml_models/` 和 `docs/reports/model_report.md`。做论文实验或临时对照时，建议加 `--run-name ... --no-promote`，产物会保存到 `backend/ml_runs/<时间>-<名称>/`，不会覆盖生产模型。
+
 ### 对照实验
 
-```bash
+```powershell
 cd backend
 
 # 步骤 1：编辑两组参数
 # scripts/experiments/baseline.json  — 对照组（当前默认参数）
 # scripts/experiments/experiment.json — 实验组（你修改的参数）
 
-# 步骤 2：跑 baseline，保存结果
-uv run python scripts/train_models.py --params scripts/experiments/baseline.json
-copy ml_models/training_meta.json scripts/experiments/baseline_result.json
+# 步骤 2：跑 baseline，保存到独立目录，不覆盖生产模型
+uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
-# 步骤 3：跑 experiment，保存结果
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json
-copy ml_models/training_meta.json scripts/experiments/experiment_result.json
+# 步骤 3：跑 experiment，保存到独立目录，不覆盖生产模型
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
 
-# 步骤 4：生成对比报告
-uv run python scripts/experiments/compare.py --output ../docs/reports/comparison_report.md
+# 步骤 4：查看生成的 run 目录名称
+Get-ChildItem ml_runs | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,LastWriteTime
+
+# 步骤 5：生成对比报告
+uv run python scripts/experiments/compare.py `
+  --baseline ml_runs\<baseline-run-dir> `
+  --experiment ml_runs\<experiment-run-dir> `
+  --output ../docs/reports/comparison_report.md
 ```
 
-对比报告输出到 `docs/reports/comparison_report.md`，参数说明和指标解读见 `docs/training_guide.md`。
+对比报告输出到 `docs/reports/comparison_report.md`，参数说明、run 目录说明和指标解读见 `docs/training_guide.md`。
 
 本地训练前如需使用系统补充样本，可以先显式导出训练数据：
 
@@ -319,10 +327,13 @@ uv run python scripts/export_training_data.py --recent-bp-count 5
 - 默认使用固定 seed（当前为 `42`）保证结果可复现；可通过 `--seed <int>` 指定 seed，或用 `--random-seed` 为单次训练生成新 seed
 - 使用 `--params <path>` 时，参数文件中的 `seed` 会作为默认 seed；如果同时传入 `--seed <int>`，命令行 seed 优先
 - `--save-params <path>` 会导出当前默认训练参数，便于保存基线配置和做对照实验
+- `--run-name <name>` 会把单次训练产物保存到 `backend/ml_runs/<timestamp>-<name>/`
+- `--no-promote` 只保存实验产物，不覆盖生产模型；`--promote` 会同时保存 run 目录并更新生产模型
+- `--output-root <path>` 可自定义 run 目录根路径，默认是 `backend/ml_runs/`
 - 参数文件可配置测试集比例、阈值验证集比例、最大训练轮数、早停轮数、学习率、缺失值策略、标签来源策略、是否启用特征消融和多 seed 审计等训练设置
 - 默认调优策略为 `LightGBMTunerCV`；代码层可通过 `TuningStrategy` 注入 `NoOpTuningStrategy` 等替代策略做纯参数对照实验
 - 训练完成后会生成 `lgbm_model.txt`、`model_config.json`、`training_meta.json` 和 `docs/reports/model_report.md`
-- `backend/ml_models/`、`docs/reports/model_report.md` 和 `datasets/training_data_export.csv` 属于本地生成产物，默认不纳入版本控制
+- `backend/ml_models/`、`backend/ml_runs/`、`docs/reports/model_report.md` 和 `datasets/training_data_export.csv` 属于本地生成产物，默认不纳入版本控制
 - 若使用 `Optuna + LightGBMTunerCV`，调参阶段可能耗时较长
 - 如果手动中断训练，终端中出现 `KeyboardInterrupt` 属于正常现象，不代表代码报错，只表示调参过程被人为停止
 

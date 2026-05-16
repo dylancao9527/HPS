@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
+from pathlib import Path
 
 import numpy as np
 
@@ -34,6 +35,61 @@ def _format_ratio(value) -> str:
 def _run_quietly(callable_obj, *args, **kwargs):
     with redirect_stdout(StringIO()):
         return callable_obj(*args, **kwargs)
+
+
+def _save_artifacts(
+    *,
+    output_dir,
+    optimized_model,
+    feature_columns,
+    categorical_features,
+    optimized_metrics,
+    dataset_summary,
+    split_summary,
+    baseline_metrics,
+    tuning_summary,
+    feature_ablation,
+    multi_seed_summary,
+    config,
+):
+    output_kwargs = {"output_dir": output_dir} if output_dir is not None else {}
+    save_final_model(
+        optimized_model,
+        feature_columns,
+        categorical_features,
+        optimized_metrics["threshold"],
+        bp_meds_policy=dataset_summary["bp_meds_policy"],
+        label_mode=dataset_summary["label_mode"],
+        dataset_hash=dataset_summary["dataset_hash"],
+        missing_value_strategy=optimized_metrics.get("missing_value_strategy", "native"),
+        threshold_search_mode=config.threshold_search_mode,
+        threshold_min_recall=config.threshold_min_recall,
+        **output_kwargs,
+    )
+    save_training_meta(
+        dataset_summary,
+        split_summary,
+        baseline_metrics,
+        tuning_summary,
+        optimized_metrics,
+        feature_columns,
+        optimized_model,
+        feature_ablation=feature_ablation,
+        multi_seed_summary=multi_seed_summary,
+        **output_kwargs,
+    )
+    generate_report(
+        baseline_metrics,
+        optimized_metrics,
+        feature_columns,
+        optimized_model,
+        dataset_summary,
+        tuning_summary,
+        split_summary,
+        feature_ablation=feature_ablation,
+        multi_seed_summary=multi_seed_summary,
+        **output_kwargs,
+    )
 
 
 def _train_final_cycle(
@@ -122,6 +178,7 @@ def run_feature_ablation(
             learning_rate=config.learning_rate,
             max_boost_rounds=config.max_boost_rounds,
             early_stopping_rounds=config.early_stopping_rounds,
+            cv_splits=config.cv_splits,
         )
         _, optimized_metrics = _train_final_cycle(
             tuning_summary.params,
@@ -188,6 +245,7 @@ def run_multi_seed_audit(
             learning_rate=config.learning_rate,
             max_boost_rounds=config.max_boost_rounds,
             early_stopping_rounds=config.early_stopping_rounds,
+            cv_splits=config.cv_splits,
         )
         _, optimized_metrics = _train_final_cycle(
             tuning_summary.params,
@@ -210,6 +268,8 @@ def run_training(
     random_seed: int = SEED,
     tuning_strategy: TuningStrategy | None = None,
     config: TrainingConfig | None = None,
+    artifact_dir: str | Path | None = None,
+    promote: bool = True,
 ):
     if config is None:
         config = DEFAULT_CONFIG
@@ -263,6 +323,7 @@ def run_training(
         learning_rate=config.learning_rate,
         max_boost_rounds=config.max_boost_rounds,
         early_stopping_rounds=config.early_stopping_rounds,
+        cv_splits=config.cv_splits,
     )
     progress.finish_step(
         cv_auc=tuning_summary.cv_auc,
@@ -309,40 +370,42 @@ def run_training(
         )
 
     progress.start_step("保存产物")
-    save_final_model(
-        optimized_model,
-        feature_columns,
-        categorical_features,
-        optimized_metrics["threshold"],
-        bp_meds_policy=dataset_summary["bp_meds_policy"],
-        label_mode=dataset_summary["label_mode"],
-        dataset_hash=dataset_summary["dataset_hash"],
-        missing_value_strategy=optimized_metrics.get("missing_value_strategy", "native"),
-        threshold_search_mode=config.threshold_search_mode,
-        threshold_min_recall=config.threshold_min_recall,
-    )
-    save_training_meta(
-        dataset_summary,
-        split_summary,
-        baseline_metrics,
-        tuning_summary,
-        optimized_metrics,
-        feature_columns,
-        optimized_model,
-        feature_ablation=feature_ablation,
-        multi_seed_summary=multi_seed_summary,
-    )
-    generate_report(
-        baseline_metrics,
-        optimized_metrics,
-        feature_columns,
-        optimized_model,
-        dataset_summary,
-        tuning_summary,
-        split_summary,
-        feature_ablation=feature_ablation,
-        multi_seed_summary=multi_seed_summary,
-    )
+    saved_artifact_dir = Path(artifact_dir) if artifact_dir is not None else None
+    if saved_artifact_dir is not None:
+        _save_artifacts(
+            output_dir=saved_artifact_dir,
+            optimized_model=optimized_model,
+            feature_columns=feature_columns,
+            categorical_features=categorical_features,
+            optimized_metrics=optimized_metrics,
+            dataset_summary=dataset_summary,
+            split_summary=split_summary,
+            baseline_metrics=baseline_metrics,
+            tuning_summary=tuning_summary,
+            feature_ablation=feature_ablation,
+            multi_seed_summary=multi_seed_summary,
+            config=config,
+        )
+
+    if promote or saved_artifact_dir is None:
+        _save_artifacts(
+            output_dir=None,
+            optimized_model=optimized_model,
+            feature_columns=feature_columns,
+            categorical_features=categorical_features,
+            optimized_metrics=optimized_metrics,
+            dataset_summary=dataset_summary,
+            split_summary=split_summary,
+            baseline_metrics=baseline_metrics,
+            tuning_summary=tuning_summary,
+            feature_ablation=feature_ablation,
+            multi_seed_summary=multi_seed_summary,
+            config=config,
+        )
     progress.finish_step(
         artifacts="lgbm_model.txt model_config.json training_meta.json model_report.md"
     )
+    return {
+        "artifact_dir": str(saved_artifact_dir) if saved_artifact_dir is not None else None,
+        "promoted": bool(promote or saved_artifact_dir is None),
+    }

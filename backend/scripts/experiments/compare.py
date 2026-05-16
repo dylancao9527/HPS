@@ -2,17 +2,15 @@
 对照实验比较脚本
 
 用法:
-  # 先跑 baseline 训练，保存结果
-  uv run python scripts/train_models.py --params scripts/experiments/baseline.json
-  copy ml_models\\training_meta.json scripts\\experiments\\baseline_result.json
+  # 先跑 baseline 训练，保存到独立目录，不覆盖生产模型
+  uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
-  # 再跑 experiment 训练，保存结果
-  uv run python scripts/train_models.py --params scripts/experiments/experiment.json
-  copy ml_models\\training_meta.json scripts\\experiments\\experiment_result.json
+  # 再跑 experiment 训练，保存到独立目录
+  uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
 
   # 生成对比报告
-  uv run python scripts/experiments/compare.py
-  uv run python scripts/experiments/compare.py --output docs/reports/comparison_report.md
+  uv run python scripts/experiments/compare.py --baseline ml_runs\\20260516-220000-baseline-recall --experiment ml_runs\\20260516-221000-experiment-f1
+  uv run python scripts/experiments/compare.py --output ..\\docs\\reports\\comparison_report.md
 """
 from __future__ import annotations
 
@@ -65,12 +63,17 @@ def _diff_params(baseline_json: dict, experiment_json: dict) -> list[tuple[str, 
     return rows
 
 
-def build_comparison(baseline: dict, experiment: dict) -> str:
+def build_comparison(
+    baseline: dict,
+    experiment: dict,
+    baseline_source: str = "baseline_result.json",
+    experiment_source: str = "experiment_result.json",
+) -> str:
     lines: list[str] = []
 
     lines.append("# 训练对照实验报告\n")
-    lines.append(f"- Baseline 结果: `baseline_result.json`")
-    lines.append(f"- Experiment 结果: `experiment_result.json`")
+    lines.append(f"- Baseline 结果: `{baseline_source}`")
+    lines.append(f"- Experiment 结果: `{experiment_source}`")
     lines.append("")
 
     # --- 参数差异 ---
@@ -197,17 +200,29 @@ def _load_params(path: Path) -> dict | None:
     return None
 
 
+def _load_result(path_value: str) -> dict:
+    path = Path(path_value)
+    if path.is_dir():
+        path = path / "training_meta.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def main():
     parser = argparse.ArgumentParser(description="对照实验比较")
-    parser.add_argument("--baseline", default=str(DEFAULT_BASELINE), help="baseline 结果 JSON")
-    parser.add_argument("--experiment", default=str(DEFAULT_EXPERIMENT), help="experiment 结果 JSON")
+    parser.add_argument("--baseline", default=str(DEFAULT_BASELINE), help="baseline 结果 JSON 或 run 目录")
+    parser.add_argument("--experiment", default=str(DEFAULT_EXPERIMENT), help="experiment 结果 JSON 或 run 目录")
     parser.add_argument("--output", default=None, help="输出 markdown 文件路径（不填则打印到终端）")
     args = parser.parse_args()
 
-    baseline = json.loads(Path(args.baseline).read_text(encoding="utf-8"))
-    experiment = json.loads(Path(args.experiment).read_text(encoding="utf-8"))
+    baseline = _load_result(args.baseline)
+    experiment = _load_result(args.experiment)
 
-    report = build_comparison(baseline, experiment)
+    report = build_comparison(
+        baseline,
+        experiment,
+        baseline_source=args.baseline,
+        experiment_source=args.experiment,
+    )
 
     if args.output:
         out = Path(args.output)

@@ -1,5 +1,22 @@
 # LightGBM 训练参数与评估指标说明
 
+## 零、本次训练链路新增了什么
+
+本次代码改动主要是为了让对照实验更容易复现，也更不容易误覆盖生产模型。新增内容集中在训练入口、产物保存和对照报告三处：
+
+| 改动位置 | 新增能力 | 做实验时的用途 |
+|---|---|---|
+| `scripts/train_models.py` | 新增 `--run-name` | 给一次训练命名，产物保存到 `backend/ml_runs/<时间>-<名称>/` |
+| `scripts/train_models.py` | 新增 `--no-promote` | 只保存本次实验产物，不覆盖 `backend/ml_models/` 和 `docs/reports/model_report.md` |
+| `scripts/train_models.py` | 新增 `--promote` | 在保存实验目录的同时，更新生产模型目录和 canonical 报告 |
+| `scripts/train_models.py` | 新增 `--output-root` | 自定义实验产物根目录，默认是 `backend/ml_runs/` |
+| `training/pipeline.py`、`training/reporting.py` | 支持 `artifact_dir` 和 `promote` | 同一套训练流程既能写生产模型，也能写独立实验目录 |
+| `training/trainer.py` | `cv_splits` 透传到 LightGBMTunerCV | 参数文件中的交叉验证折数会真正影响调参过程 |
+| `scripts/experiments/compare.py` | `--baseline`、`--experiment` 可传 run 目录 | 不再需要手动复制 `training_meta.json` 到 `baseline_result.json` |
+| `.gitignore` | 忽略 `backend/ml_runs` | 多次实验产生的本地模型产物不会污染 git |
+
+因此，现在推荐把正式模型训练和论文/报告实验分开处理。正式训练仍可直接运行 `uv run python scripts/train_models.py`；做对照实验时，优先使用 `--run-name ... --no-promote`，这样每组实验都会留下完整的 `params.json`、`training_meta.json`、`model_report.md`、`model_config.json` 和 `lgbm_model.txt`。
+
 ## 一、评估指标
 
 ### 1.1 基础概念：混淆矩阵
@@ -207,30 +224,70 @@ LightGBMTunerCV 采用**逐步贪心搜索**，按以下顺序依次调优 6 组
 
 ## 六、对照实验操作流程
 
-### 6.1 操作步骤
+### 6.1 推荐流程：保存到独立 run 目录
 
-```bash
+以下流程适合论文实验和参数对照。它不会覆盖生产模型目录，跑完后每一组结果都会保存在 `backend/ml_runs/` 下。
+
+```powershell
 cd backend
 
 # 1. 编辑参数文件
 #    scripts/experiments/baseline.json   ← 对照组
 #    scripts/experiments/experiment.json  ← 实验组
 
-# 2. 跑 baseline，保存结果
-uv run python scripts/train_models.py --params scripts/experiments/baseline.json
-copy ml_models\training_meta.json scripts\experiments\baseline_result.json
+# 2. 跑 baseline，保存到独立目录，不覆盖生产模型
+uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
-# 3. 跑 experiment，保存结果
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json
-copy ml_models\training_meta.json scripts\experiments\experiment_result.json
+# 3. 跑 experiment，保存到独立目录，不覆盖生产模型
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
 
-# 4. 生成对比报告
-uv run python scripts/experiments/compare.py --output ../docs/reports/comparison_report.md
+# 4. 查看本次生成的 run 目录名称
+Get-ChildItem ml_runs | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,LastWriteTime
+
+# 5. 用两个 run 目录生成对比报告
+uv run python scripts/experiments/compare.py `
+  --baseline ml_runs\<baseline-run-dir> `
+  --experiment ml_runs\<experiment-run-dir> `
+  --output ../docs/reports/comparison_report.md
 ```
 
-### 6.2 对比报告说明
+其中，`<baseline-run-dir>` 和 `<experiment-run-dir>` 替换为第 4 步看到的实际目录名，例如 `20260516-220000-baseline-recall`。`compare.py` 会自动读取目录下的 `training_meta.json`。
 
-`compare.py` 会自动读取两个 `_result.json`，输出包含以下内容的 Markdown 报告：
+### 6.2 什么时候覆盖生产模型
+
+如果只是做论文实验、调参比较或临时测试，使用 `--no-promote`。如果确认某次训练结果要成为系统实际使用的模型，可以使用以下命令：
+
+```powershell
+cd backend
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name final-f1 --promote
+```
+
+这会同时写入两个位置：
+
+| 位置 | 内容 | 用途 |
+|---|---|---|
+| `backend/ml_runs/<时间>-final-f1/` | 本次实验完整产物 | 留档、复查、对照实验 |
+| `backend/ml_models/` 和 `docs/reports/model_report.md` | 生产模型与 canonical 报告 | 系统实际预测和默认报告 |
+
+如果不加 `--run-name`，训练脚本保持旧行为：直接更新 `backend/ml_models/` 和 `docs/reports/model_report.md`。
+
+### 6.3 旧流程兼容
+
+`compare.py` 仍然兼容旧的 JSON 文件输入。如果已经手动保存了 `baseline_result.json` 和 `experiment_result.json`，可以继续使用：
+
+```powershell
+cd backend
+uv run python scripts/experiments/compare.py `
+  --baseline scripts/experiments/baseline_result.json `
+  --experiment scripts/experiments/experiment_result.json `
+  --output ../docs/reports/comparison_report.md
+```
+
+新流程更推荐使用 run 目录，因为目录里除了 `training_meta.json`，还保留了 `params.json` 和单次 `model_report.md`，后面检查实验口径更方便。
+
+### 6.4 对比报告说明
+
+`compare.py` 会读取两个 run 目录或两个结果 JSON，输出包含以下内容的 Markdown 报告：
 
 | 报告章节 | 内容 |
 |---|---|

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 from datetime import UTC, datetime
+from pathlib import Path
 
 from .ml_schema import (
     BASE_TRAINING_DATASET,
@@ -12,6 +13,12 @@ from .ml_schema import (
 )
 from .config import DOCS_DIR, MODELS_DIR, THRESHOLD_MIN_RECALL, THRESHOLD_SEARCH_MODE
 from .metrics import summarize_feature_importance
+
+
+def _resolve_output_dir(default_dir: Path, output_dir: str | Path | None = None) -> Path:
+    target_dir = Path(output_dir) if output_dir is not None else default_dir
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
 
 
 def _get_training_code_version() -> str:
@@ -36,6 +43,7 @@ def generate_report(
     *,
     feature_ablation=None,
     multi_seed_summary=None,
+    output_dir: str | Path | None = None,
 ):
     importance_summary = summarize_feature_importance(feature_columns, optimized_model)
     feature_imp = importance_summary["feature_importance"]
@@ -234,7 +242,7 @@ def generate_report(
 本项目中的 Prophet 模型持久化在用户维度进行：预测链路会根据新增血压自然日数量判断是否重训，未达到阈值时复用已有模型重新生成本次未来7天血压趋势。为平衡预测效果与交互效率，系统默认仅截取最近 `90` 天的日均血压数据参与训练，并同步返回 `total_history_days` 与 `history_window_capped` 字段说明本次训练窗口情况。
 """
 
-    report_path = DOCS_DIR / "model_report.md"
+    report_path = _resolve_output_dir(DOCS_DIR, output_dir) / "model_report.md"
     with open(report_path, "w", encoding="utf-8") as file:
         file.write(report)
 
@@ -254,9 +262,11 @@ def save_final_model(
     missing_value_strategy,
     threshold_search_mode=THRESHOLD_SEARCH_MODE,
     threshold_min_recall=THRESHOLD_MIN_RECALL,
+    output_dir: str | Path | None = None,
 ):
-    model_path = MODELS_DIR / "lgbm_model.txt"
-    config_path = MODELS_DIR / "model_config.json"
+    target_dir = _resolve_output_dir(MODELS_DIR, output_dir)
+    model_path = target_dir / "lgbm_model.txt"
+    config_path = target_dir / "model_config.json"
     model.save_model(str(model_path))
     best_iteration = model.best_iteration or model.current_iteration()
 
@@ -297,8 +307,9 @@ def save_training_meta(
     *,
     feature_ablation=None,
     multi_seed_summary=None,
+    output_dir: str | Path | None = None,
 ):
-    meta_path = MODELS_DIR / "training_meta.json"
+    meta_path = _resolve_output_dir(MODELS_DIR, output_dir) / "training_meta.json"
     feature_summary = summarize_feature_importance(feature_columns, optimized_model)
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),

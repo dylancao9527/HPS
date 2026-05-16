@@ -87,8 +87,9 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
                 random_seed, learning_rate=0.05,
                 max_boost_rounds=1000,
                 early_stopping_rounds=50,
+                cv_splits=5,
             ):
-                _ = max_boost_rounds, early_stopping_rounds
+                _ = max_boost_rounds, early_stopping_rounds, cv_splits
                 calls.append(("tune", random_seed))
                 return SimpleNamespace(
                     params={"objective": "binary"},
@@ -295,9 +296,11 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
             random_seed, learning_rate=0.05,
             max_boost_rounds=1000,
             early_stopping_rounds=50,
+            cv_splits=5,
         ):
             _ = max_boost_rounds, early_stopping_rounds
             captured["learning_rate"] = learning_rate
+            captured["cv_splits"] = cv_splits
             return SimpleNamespace(
                 params={"objective": "binary"},
                 cv_auc=0.91,
@@ -345,6 +348,7 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
     config = TrainingConfig(
         test_size=0.33,
         threshold_valid_size=0.22,
+        cv_splits=3,
         threshold_search_mode="f1",
         threshold_min_recall=0.55,
         missing_value_strategy="median_impute",
@@ -364,6 +368,7 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
     assert captured["data_config"] == ("observed", "diagnosis_only")
     assert captured["test_size"] == 0.33
     assert captured["learning_rate"] == 0.12
+    assert captured["cv_splits"] == 3
     assert captured["missing_strategies"] == ["median_impute", "median_impute"]
     assert captured["threshold_kwargs"] == {"strategy": "f1", "min_recall": 0.55}
     assert ("threshold_isolation", 0.22) in calls
@@ -400,10 +405,12 @@ def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
             learning_rate=0.05,
             max_boost_rounds=1000,
             early_stopping_rounds=50,
+            cv_splits=5,
         ):
             captured["tuning_window"] = (
                 max_boost_rounds,
                 early_stopping_rounds,
+                cv_splits,
             )
             return SimpleNamespace(
                 params={"objective": "binary"},
@@ -449,7 +456,7 @@ def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
     pipeline.run_training(
         random_seed=7,
         tuning_strategy=FakeStrategy(),
-        config=TrainingConfig(max_boost_rounds=345, early_stopping_rounds=23),
+        config=TrainingConfig(max_boost_rounds=345, early_stopping_rounds=23, cv_splits=4),
     )
 
-    assert captured["tuning_window"] == (345, 23)
+    assert captured["tuning_window"] == (345, 23, 4)
