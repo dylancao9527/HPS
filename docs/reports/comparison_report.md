@@ -1,7 +1,7 @@
 # 训练对照实验报告
 
-- Baseline 结果: `D:\projects\HPS\backend\ml_runs\20260516-225844-baseline-recall`
-- Experiment 结果: `D:\projects\HPS\backend\ml_runs\20260516-225919-experiment-f1`
+- Baseline 结果: `D:\projects\HPS\backend\ml_runs\20260516-231252-baseline-recall-rerun`
+- Experiment 结果: `D:\projects\HPS\backend\ml_runs\20260516-231319-experiment-f1-rerun`
 
 ## 一、参数差异
 
