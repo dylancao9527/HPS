@@ -231,15 +231,19 @@ LightGBMTunerCV 采用**逐步贪心搜索**，按以下顺序依次调优 6 组
 ```powershell
 cd backend
 
-# 1. 编辑参数文件
-#    scripts/experiments/baseline.json   ← 对照组
-#    scripts/experiments/experiment.json  ← 实验组
+# 1. 编辑参数文件；对照实验参数统一使用 recall_priority 阈值策略
+#    scripts/experiments/baseline.json              ← 默认 recall 对照组
+#    scripts/experiments/experiment.json            ← 高召回组（min_recall=0.85）
+#    scripts/experiments/low_lr_long_recall.json    ← 低学习率长训练组
+#    scripts/experiments/fast_lr_short_recall.json  ← 高学习率快停组
+#    scripts/experiments/median_impute_recall.json  ← 中位数缺失值填补组
+#    scripts/experiments/bpmeds_observed_recall.json ← 保留 BPMeds 原始信号组
 
 # 2. 跑 baseline，保存到独立目录，不覆盖生产模型
 uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
 # 3. 跑 experiment，保存到独立目录，不覆盖生产模型
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name recall-min85 --no-promote
 
 # 4. 查看本次生成的 run 目录名称
 Get-ChildItem ml_runs | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,LastWriteTime
@@ -259,14 +263,14 @@ uv run python scripts/experiments/compare.py `
 
 ```powershell
 cd backend
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name final-f1 --promote
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name final-recall-min85 --promote
 ```
 
 这会同时写入两个位置：
 
 | 位置 | 内容 | 用途 |
 |---|---|---|
-| `backend/ml_runs/<时间>-final-f1/` | 本次实验完整产物 | 留档、复查、对照实验 |
+| `backend/ml_runs/<时间>-final-recall-min85/` | 本次实验完整产物 | 留档、复查、对照实验 |
 | `backend/ml_models/` 和 `docs/reports/model_report.md` | 生产模型与 canonical 报告 | 系统实际预测和默认报告 |
 
 如果不加 `--run-name`，训练脚本保持旧行为：直接更新 `backend/ml_models/` 和 `docs/reports/model_report.md`。
@@ -298,3 +302,37 @@ uv run python scripts/experiments/compare.py `
 | TunerCV 调参对比 | CV AUC 和调优后参数差异 |
 | 混淆矩阵 | TP/FP/FN/TN 对比 |
 | 特征重要性 | 各特征 gain% 对比 |
+
+---
+
+## 七、当前生产模型与实验结论
+
+2026-05-17 的对照实验统一采用 `threshold_search_mode=recall_priority`，固定 `seed=42` 和 `label_mode=diagnosis_plus_rule`，再调整召回下限、学习率、训练轮数、缺失值策略和 BPMeds 处理策略形成差异。
+
+当前生产模型来自 `scripts/experiments/experiment.json`，发布 run 为 `backend/ml_runs/20260517-144019-final-recall-min85/`。核心配置如下：
+
+| 参数 | 数值 |
+|---|---|
+| `threshold_search_mode` | `recall_priority` |
+| `threshold_min_recall` | `0.85` |
+| `learning_rate` | `0.05` |
+| `missing_value_strategy` | `native` |
+| `bp_meds_policy` | `neutralized_for_conservative_inference` |
+| `label_mode` | `diagnosis_plus_rule` |
+
+核心指标如下：
+
+| 指标 | 数值 |
+|---|---:|
+| AUC | 0.9498 |
+| PR-AUC | 0.8706 |
+| Brier Score | 0.0850 |
+| Precision | 0.8246 |
+| Recall | 0.8935 |
+| F1 | 0.8577 |
+| Threshold | 0.6503 |
+| TP/FP/FN/TN | 235/50/28/535 |
+
+选择它的原因是：在六组 recall-priority 实验中，`recall-min85` 的 Recall 和 F1 同时最高，并且 AUC、PR-AUC、Brier Score 没有明显退化。`bpmeds_observed` 虽然 AUC 更高，但 Recall 和 F1 明显低于当前生产目标，因此不作为召回优先生产模型。
+
+更详细的多组对照见 `docs/reports/comparison_report.md`；开发者操作指南见 `docs/dev/lightgbm-training-experiments.md`。

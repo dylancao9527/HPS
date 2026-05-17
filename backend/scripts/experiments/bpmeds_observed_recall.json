@@ -6,10 +6,10 @@
   "early_stopping_rounds": 50,
   "max_boost_rounds": 1000,
   "threshold_search_mode": "recall_priority",
-  "threshold_min_recall": 0.85,
+  "threshold_min_recall": 0.75,
   "missing_value_strategy": "native",
   "learning_rate": 0.05,
-  "bp_meds_policy": "neutralized_for_conservative_inference",
+  "bp_meds_policy": "observed",
   "label_mode": "diagnosis_plus_rule",
   "enable_feature_ablation": false,
   "multi_seed_audit_seeds": []

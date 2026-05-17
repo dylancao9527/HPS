@@ -68,9 +68,11 @@ def test_generate_report_describes_single_official_tuning_path(monkeypatch):
             "strategy": "recall_priority",
             "min_recall": 0.8,
             "candidate_count": 20,
+            "recall_constraint_satisfied": True,
         },
         split_summary={
             "threshold_isolation": True,
+            "threshold_isolation_scope": "before_tuning",
             "best_iteration_source": "early_stop_valid_refit",
         },
         confusion_matrix={"tn": 50, "fp": 10, "fn": 4, "tp": 36},
@@ -107,6 +109,8 @@ def test_generate_report_describes_single_official_tuning_path(monkeypatch):
     assert "- 调优器：`LightGBMTunerCV`" in report
     assert "- 参数策略：`LightGBMTunerCV official stepwise parameter tuning`" in report
     assert "- 最优 CV AUC：`0.9384`" in report
+    assert "- Recall 约束满足：`True`" in report
+    assert "- 阈值集隔离范围：`before_tuning`" in report
     assert "不采用预先持久化模型" not in report
     assert "Prophet 模型持久化" in report
     bucket_row = "| 0.0-0.1 | 5 | 0.0500 | 0.0000 |"

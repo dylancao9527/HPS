@@ -33,6 +33,7 @@
 - 训练数据导出：`cd backend && uv run python scripts/export_training_data.py [--recent-bp-count N]`
 - 模型训练：`cd backend && uv run python scripts/train_models.py [--seed N | --random-seed] [--params config.json | --save-params config.json]`
 - 模型训练不自动导出训练数据；需要补充系统样本时先显式导出，再运行训练脚本。
+- LightGBM 对照实验统一使用 `recall_priority`，先 `--run-name ... --no-promote` 留档，确认最佳后再 `--promote` 发布生产模型。
 
 ### 路径与目录约定
 

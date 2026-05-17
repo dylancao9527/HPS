@@ -279,7 +279,7 @@ uv run python scripts/train_models.py --seed 7
 uv run python scripts/train_models.py --random-seed
 uv run python scripts/train_models.py --save-params scripts/experiments/baseline.json
 uv run python scripts/train_models.py --params scripts/experiments/baseline.json
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name recall-min85 --no-promote
 ```
 
 不带 `--run-name` 时，训练会更新 `backend/ml_models/` 和 `docs/reports/model_report.md`。做论文实验或临时对照时，建议加 `--run-name ... --no-promote`，产物会保存到 `backend/ml_runs/<时间>-<名称>/`，不会覆盖生产模型。
@@ -289,15 +289,19 @@ uv run python scripts/train_models.py --params scripts/experiments/experiment.js
 ```powershell
 cd backend
 
-# 步骤 1：编辑两组参数
-# scripts/experiments/baseline.json  — 对照组（当前默认参数）
-# scripts/experiments/experiment.json — 实验组（你修改的参数）
+# 步骤 1：编辑参数；对照实验参数统一使用 recall_priority 阈值策略
+# scripts/experiments/baseline.json              — 默认 recall 对照组
+# scripts/experiments/experiment.json            — 高召回组（min_recall=0.85）
+# scripts/experiments/low_lr_long_recall.json    — 低学习率长训练组
+# scripts/experiments/fast_lr_short_recall.json  — 高学习率快停组
+# scripts/experiments/median_impute_recall.json  — 中位数缺失值填补组
+# scripts/experiments/bpmeds_observed_recall.json — 保留 BPMeds 原始信号组
 
 # 步骤 2：跑 baseline，保存到独立目录，不覆盖生产模型
 uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
 # 步骤 3：跑 experiment，保存到独立目录，不覆盖生产模型
-uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
+uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name recall-min85 --no-promote
 
 # 步骤 4：查看生成的 run 目录名称
 Get-ChildItem ml_runs | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,LastWriteTime
@@ -309,7 +313,7 @@ uv run python scripts/experiments/compare.py `
   --output ../docs/reports/comparison_report.md
 ```
 
-对比报告输出到 `docs/reports/comparison_report.md`，参数说明、run 目录说明和指标解读见 `docs/training_guide.md`。
+对比报告输出到 `docs/reports/comparison_report.md`，参数说明、run 目录说明和指标解读见 `docs/training_guide.md`。开发者侧的完整实验、晋升和核对流程见 `docs/dev/lightgbm-training-experiments.md`。
 
 本地训练前如需使用系统补充样本，可以先显式导出训练数据：
 

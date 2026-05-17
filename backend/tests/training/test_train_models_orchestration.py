@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 import sys
 
+import pytest
+
 import scripts.train_models as train_models
 from training import pipeline
 from training.config import SEED, TrainingConfig
@@ -29,20 +31,6 @@ def _make_fake_trainer_class(calls):
         def with_threshold_isolation(self, size=0.1):
             calls.append(("threshold_isolation", size))
             return self
-
-        def build_data(self, X_train, y_train, X_test, y_test):
-            calls.append(("build_data", len(X_test)))
-            return SimpleNamespace(
-                X_fit=["f"], y_fit=[1],
-                X_valid=["v"], y_valid=[0],
-                X_test=["t"], y_test=[0],
-                X_threshold=["h"], y_threshold=[0],
-                X_model_pool=["m"], y_model_pool=[1],
-                frame_dict=lambda: {
-                    "X_fit": ["f"], "X_valid": ["v"], "X_test": ["t"],
-                    "X_threshold": ["h"], "X_model_pool": ["m"],
-                },
-            )
 
         def train(self, X_fit, y_fit, X_valid, y_valid):
             calls.append(("train",))
@@ -78,7 +66,42 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
 
     def fake_split_train_test(X, y, random_seed, test_size=0.2):
         calls.append(("split", random_seed, test_size, tuple(X), tuple(y)))
-        return ["x-train"], ["x-test"], [1], [0]
+        return ["x-train-a", "x-train-b"], ["x-test"], [1, 0], [0]
+
+    def fake_split_threshold_holdout(X_train, y_train, random_seed, test_size):
+        calls.append(("threshold_holdout", tuple(X_train), tuple(y_train), test_size))
+        return ["x-model"], ["x-threshold"], [1], [0]
+
+    def fake_build_training_data(
+        X_model_pool,
+        y_model_pool,
+        X_threshold,
+        y_threshold,
+        X_test,
+        y_test,
+        *,
+        random_seed,
+        config,
+    ):
+        calls.append(
+            (
+                "build_data",
+                tuple(X_model_pool),
+                tuple(X_threshold),
+                tuple(X_test),
+            )
+        )
+        return SimpleNamespace(
+            X_fit=["f"], y_fit=[1],
+            X_valid=["v"], y_valid=[0],
+            X_test=["t"], y_test=[0],
+            X_threshold=["h"], y_threshold=[0],
+            X_model_pool=["m"], y_model_pool=[1],
+            frame_dict=lambda: {
+                "X_fit": ["f"], "X_valid": ["v"], "X_test": ["t"],
+                "X_threshold": ["h"], "X_model_pool": ["m"],
+            },
+        )
 
     def make_fake_strategy():
         class FakeStrategy:
@@ -90,7 +113,7 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
                 cv_splits=5,
             ):
                 _ = max_boost_rounds, early_stopping_rounds, cv_splits
-                calls.append(("tune", random_seed))
+                calls.append(("tune", tuple(X_train), tuple(y_train), random_seed))
                 return SimpleNamespace(
                     params={"objective": "binary"},
                     cv_auc=0.91,
@@ -135,12 +158,16 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
 
     monkeypatch.setattr(pipeline, "prepare_lgbm_data", fake_prepare_lgbm_data)
     monkeypatch.setattr(pipeline, "split_train_test", fake_split_train_test)
+    monkeypatch.setattr(pipeline, "split_threshold_holdout", fake_split_threshold_holdout)
+    monkeypatch.setattr(pipeline, "_build_training_data", fake_build_training_data)
     monkeypatch.setattr(pipeline, "LightGBMTrainer", FakeTrainer)
     monkeypatch.setattr(pipeline, "apply_missing_value_strategy", fake_apply_missing_value_strategy)
     monkeypatch.setattr(pipeline, "find_best_threshold", fake_find_best_threshold)
     monkeypatch.setattr(pipeline, "save_final_model", fake_save_final_model)
     monkeypatch.setattr(pipeline, "save_training_meta", fake_save_training_meta)
     monkeypatch.setattr(pipeline, "generate_report", fake_generate_report)
+    monkeypatch.setattr(pipeline, "_promote_artifact_dir", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_promote_canonical_report", lambda *args, **kwargs: None)
 
     fake_strategy = make_fake_strategy()
     pipeline.run_training(random_seed=7, tuning_strategy=fake_strategy)
@@ -148,9 +175,9 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
     assert [call[0] for call in calls] == [
         "prepare",
         "split",
+        "threshold_holdout",
         # Baseline now uses _train_final_cycle (same as Tuned)
         "trainer_init",
-        "threshold_isolation",
         "build_data",
         "missing_value",
         "train",
@@ -160,7 +187,6 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
         # Tuned
         "tune",
         "trainer_init",
-        "threshold_isolation",
         "build_data",
         "missing_value",
         "train",
@@ -171,17 +197,19 @@ def test_run_training_orchestrates_training_without_real_lightgbm(monkeypatch, c
         "save_meta",
         "report",
     ]
-    assert captured["split_summary"]["train_rows"] == 1
+    assert captured["split_summary"]["train_rows"] == 2
     assert captured["split_summary"]["test_rows"] == 1
     assert captured["split_summary"]["final_refit_rows"] == 1
-    assert captured["save_model"] == {
+    assert captured["split_summary"]["threshold_isolation_scope"] == "before_tuning"
+    assert ("tune", ("x-model",), (1,), 7) in calls
+    assert captured["save_model"].items() >= {
         "bp_meds_policy": "neutralized_for_conservative_inference",
         "label_mode": "diagnosis_plus_rule",
         "dataset_hash": "hash-123",
         "missing_value_strategy": "native",
         "threshold_search_mode": "recall_priority",
         "threshold_min_recall": 0.75,
-    }
+    }.items()
     assert captured["tuning_summary"].tuner_name == "LightGBMTunerCV"
     assert captured["tuning_summary"].official_tuning is True
 
@@ -324,6 +352,28 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
 
     monkeypatch.setattr(pipeline, "prepare_lgbm_data", fake_prepare_lgbm_data)
     monkeypatch.setattr(pipeline, "split_train_test", fake_split_train_test)
+    monkeypatch.setattr(
+        pipeline,
+        "split_threshold_holdout",
+        lambda X_train, y_train, random_seed, test_size: (
+            ["x-model"], ["x-threshold"], [1], [0]
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "_build_training_data",
+        lambda X_model_pool, y_model_pool, X_threshold, y_threshold, X_test, y_test, **kwargs: SimpleNamespace(
+            X_fit=["f"], y_fit=[1],
+            X_valid=["v"], y_valid=[0],
+            X_test=["t"], y_test=[0],
+            X_threshold=["h"], y_threshold=[0],
+            X_model_pool=["m"], y_model_pool=[1],
+            frame_dict=lambda: {
+                "X_fit": ["f"], "X_valid": ["v"], "X_test": ["t"],
+                "X_threshold": ["h"], "X_model_pool": ["m"],
+            },
+        ),
+    )
     monkeypatch.setattr(pipeline, "LightGBMTrainer", FakeTrainer)
     monkeypatch.setattr(pipeline, "apply_missing_value_strategy", fake_apply_missing_value_strategy)
     monkeypatch.setattr(pipeline, "find_best_threshold", fake_find_best_threshold)
@@ -334,6 +384,8 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
     )
     monkeypatch.setattr(pipeline, "save_training_meta", lambda *args, **kwargs: None)
     monkeypatch.setattr(pipeline, "generate_report", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_promote_artifact_dir", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_promote_canonical_report", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         pipeline,
         "run_feature_ablation",
@@ -371,7 +423,6 @@ def test_run_training_passes_config_values_through_orchestration(monkeypatch):
     assert captured["cv_splits"] == 3
     assert captured["missing_strategies"] == ["median_impute", "median_impute"]
     assert captured["threshold_kwargs"] == {"strategy": "f1", "min_recall": 0.55}
-    assert ("threshold_isolation", 0.22) in calls
     assert captured["feature_ablation_config"] is config
     assert captured["multi_seed_args"] == ((11, 13), config)
     assert captured["save_model_kwargs"]["threshold_search_mode"] == "f1"
@@ -429,6 +480,28 @@ def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
         "split_train_test",
         lambda X, y, random_seed, test_size: (["x-train"], ["x-test"], [1], [0]),
     )
+    monkeypatch.setattr(
+        pipeline,
+        "split_threshold_holdout",
+        lambda X_train, y_train, random_seed, test_size: (
+            ["x-model"], ["x-threshold"], [1], [0]
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "_build_training_data",
+        lambda X_model_pool, y_model_pool, X_threshold, y_threshold, X_test, y_test, **kwargs: SimpleNamespace(
+            X_fit=["f"], y_fit=[1],
+            X_valid=["v"], y_valid=[0],
+            X_test=["t"], y_test=[0],
+            X_threshold=["h"], y_threshold=[0],
+            X_model_pool=["m"], y_model_pool=[1],
+            frame_dict=lambda: {
+                "X_fit": ["f"], "X_valid": ["v"], "X_test": ["t"],
+                "X_threshold": ["h"], "X_model_pool": ["m"],
+            },
+        ),
+    )
     monkeypatch.setattr(pipeline, "LightGBMTrainer", _make_fake_trainer_class(calls))
     monkeypatch.setattr(
         pipeline,
@@ -452,6 +525,8 @@ def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
     monkeypatch.setattr(pipeline, "save_final_model", lambda *args, **kwargs: None)
     monkeypatch.setattr(pipeline, "save_training_meta", lambda *args, **kwargs: None)
     monkeypatch.setattr(pipeline, "generate_report", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_promote_artifact_dir", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_promote_canonical_report", lambda *args, **kwargs: None)
 
     pipeline.run_training(
         random_seed=7,
@@ -460,3 +535,39 @@ def test_run_training_passes_boosting_window_to_tuning_strategy(monkeypatch):
     )
 
     assert captured["tuning_window"] == (345, 23, 4)
+
+
+def test_training_config_rejects_unknown_fields(tmp_path):
+    params_path = tmp_path / "bad.json"
+    params_path.write_text('{"cv_split": 3}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Unknown training config fields"):
+        TrainingConfig.load(params_path)
+
+
+def test_training_config_rejects_invalid_ranges():
+    with pytest.raises(ValueError, match="cv_splits"):
+        TrainingConfig(cv_splits=1)
+
+    with pytest.raises(ValueError, match="early_stopping_rounds"):
+        TrainingConfig(max_boost_rounds=10, early_stopping_rounds=10)
+
+
+def test_promote_artifact_dir_copies_candidate_and_keeps_backup(monkeypatch, tmp_path):
+    candidate = tmp_path / "candidate"
+    target = tmp_path / "ml_models"
+    backup = tmp_path / "ml_models_previous"
+    candidate.mkdir()
+    target.mkdir()
+    for name in ("lgbm_model.txt", "model_config.json", "training_meta.json"):
+        (candidate / name).write_text(f"new-{name}", encoding="utf-8")
+        (target / name).write_text(f"old-{name}", encoding="utf-8")
+
+    monkeypatch.setattr(pipeline, "PROMOTION_BACKUP_DIR", backup)
+
+    promoted = pipeline._promote_artifact_dir(candidate, target)
+
+    assert promoted == target.resolve()
+    assert (target / "model_config.json").read_text(encoding="utf-8") == "new-model_config.json"
+    assert (backup / "model_config.json").read_text(encoding="utf-8") == "old-model_config.json"
+    assert candidate.exists()

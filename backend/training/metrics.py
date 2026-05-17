@@ -20,8 +20,16 @@ def _build_threshold_candidates(y_pred_proba):
     unique_scores = sorted(
         {float(score) for score in np.asarray(y_pred_proba, dtype=float).reshape(-1)}
     )
-    candidates = [score for score in unique_scores if 0.0 < score < 1.0]
-    return candidates or [0.5]
+    if not unique_scores:
+        return [0.5]
+
+    candidates = [float(np.nextafter(unique_scores[0], -np.inf))]
+    candidates.extend(
+        (left + right) / 2
+        for left, right in zip(unique_scores, unique_scores[1:])
+    )
+    candidates.append(float(np.nextafter(unique_scores[-1], np.inf)))
+    return candidates
 
 
 def summarize_calibration(y_true, y_pred_proba, bin_count=10):
@@ -110,6 +118,7 @@ def find_best_threshold(
         "strategy": strategy,
         "min_recall": min_recall,
         "candidate_count": candidate_count,
+        "recall_constraint_satisfied": False,
     }
 
     for threshold in threshold_candidates:
@@ -135,23 +144,32 @@ def find_best_threshold(
 
         if is_better:
             best = {
-                "threshold": round(float(threshold), 6),
+                "threshold": float(threshold),
                 "f1": round(float(f1), 4),
                 "precision": round(float(precision), 4),
                 "recall": round(float(recall), 4),
                 "strategy": strategy,
                 "min_recall": min_recall,
                 "candidate_count": candidate_count,
+                "recall_constraint_satisfied": (
+                    strategy != "recall_priority"
+                    or min_recall is None
+                    or recall >= min_recall
+                ),
             }
 
     if best["f1"] < 0 and strategy == "recall_priority":
-        return find_best_threshold(
+        fallback = find_best_threshold(
             model,
             X_valid,
             y_valid,
             strategy="f1",
             min_recall=None,
         )
+        fallback["requested_strategy"] = "recall_priority"
+        fallback["requested_min_recall"] = min_recall
+        fallback["recall_constraint_satisfied"] = False
+        return fallback
 
     return best
 

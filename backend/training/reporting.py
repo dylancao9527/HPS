@@ -77,6 +77,7 @@ def generate_report(
 | 总体正样本比例 | {dataset_summary["positive_ratio"]:.1%} |
 | 训练集样本数 | {split_summary["train_rows"]} |
 | 测试集样本数 | {split_summary["test_rows"]} |
+| 调参与最终训练池样本数 | {split_summary.get("model_selection_rows", "—")} |
 | 阈值验证集样本数 | {split_summary.get("threshold_valid_rows", "—")} |
 | early-stop 训练样本数 | {split_summary.get("early_stop_fit_rows", "—")} |
 | early-stop 验证样本数 | {split_summary.get("early_stop_valid_rows", "—")} |
@@ -140,7 +141,8 @@ def generate_report(
 - 阈值搜索策略：`{o["threshold_selection"]["strategy"]}`
 - Recall 下限：`{o["threshold_selection"]["min_recall"]}`
 - 阈值候选数：`{o["threshold_selection"].get("candidate_count", "—")}`
-- 阈值集与 early stopping 隔离：`{o.get("split_summary", {}).get("threshold_isolation", False)}`
+- Recall 约束满足：`{o["threshold_selection"].get("recall_constraint_satisfied", "—")}`
+- 阈值集隔离范围：`{o.get("split_summary", {}).get("threshold_isolation_scope", "—")}`
 - best_iteration 来源：`{o.get("split_summary", {}).get("best_iteration_source", "—")}`
 
 ### 最优参数
@@ -231,9 +233,9 @@ def generate_report(
 1. 主训练集使用 `{BASE_TRAINING_DATASET}`
 2. 管理员可导出 `{EXPORT_DATASET}` 作为系统样本补充
 3. 运行 `cd backend && uv run python scripts/train_models.py`；如需显式控制随机性，可追加 `--seed <int>` 或 `--random-seed`
-4. 脚本自动合并主数据集与系统导出样本，并拆分出测试集、阈值验证集和 early-stopping 验证集
-5. 先在 early-stopping 验证集上确定最佳迭代轮数，再用完整训练池重训最终模型，并在独立阈值集上搜索分类阈值
-6. 默认训练会覆盖 `backend/ml_models/` 下的生产文件，并同步更新唯一的 canonical 报告与模型配置
+4. 脚本自动合并主数据集与系统导出样本，并先拆分测试集和独立阈值验证集
+5. LightGBMTunerCV、early stopping 和最终重训只使用阈值集之外的训练池；模型参数冻结后再用独立阈值集搜索分类阈值
+6. 默认训练会通过候选产物目录发布到 `backend/ml_models/`，并同步更新唯一的 canonical 报告与模型配置
 
 ---
 

@@ -6,10 +6,10 @@
   uv run python scripts/train_models.py --params scripts/experiments/baseline.json --run-name baseline-recall --no-promote
 
   # 再跑 experiment 训练，保存到独立目录
-  uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name experiment-f1 --no-promote
+  uv run python scripts/train_models.py --params scripts/experiments/experiment.json --run-name recall-min85 --no-promote
 
   # 生成对比报告
-  uv run python scripts/experiments/compare.py --baseline ml_runs\\20260516-220000-baseline-recall --experiment ml_runs\\20260516-221000-experiment-f1
+  uv run python scripts/experiments/compare.py --baseline ml_runs\\20260517-143158-recall-baseline --experiment ml_runs\\20260517-143320-recall-min85
   uv run python scripts/experiments/compare.py --output ..\\docs\\reports\\comparison_report.md
 """
 from __future__ import annotations

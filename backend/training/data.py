@@ -38,6 +38,18 @@ RAW_FEATURE_COLUMNS = [
 BASE_DATASET_LABEL_SOURCE = "base_dataset"
 _HASH_COLUMNS = MODEL_FEATURE_COLUMNS + [LABEL_SOURCE_COLUMN, MODEL_TARGET_COLUMN]
 
+BINARY_COLUMNS = MODEL_CATEGORICAL_FEATURES + [MODEL_TARGET_COLUMN]
+NUMERIC_RANGES = {
+    "age": (0, 120),
+    "cigsPerDay": (0, 200),
+    "totChol": (50, 1000),
+    "sysBP": (50, 350),
+    "diaBP": (30, 250),
+    "BMI": (10, 100),
+    "heartRate": (20, 250),
+    "glucose": (20, 1000),
+}
+
 
 
 def get_feature_sets():
@@ -61,6 +73,26 @@ def get_feature_sets():
     ]
 
 
+def _format_invalid_rows(path: Path, column: str, invalid_index) -> str:
+    rows = [int(index) + 2 for index in invalid_index[:5]]
+    suffix = "" if len(invalid_index) <= 5 else f" 等 {len(invalid_index)} 行"
+    return f"{path.name} 字段 {column} 含非法值，CSV 行: {rows}{suffix}"
+
+
+def _validate_training_frame(frame: pd.DataFrame, path: Path) -> None:
+    for column in BINARY_COLUMNS:
+        values = frame[column].dropna()
+        invalid = values[~values.isin([0, 1])]
+        if not invalid.empty:
+            raise ValueError(_format_invalid_rows(path, column, invalid.index.tolist()))
+
+    for column, (minimum, maximum) in NUMERIC_RANGES.items():
+        values = frame[column].dropna()
+        invalid = values[(values < minimum) | (values > maximum)]
+        if not invalid.empty:
+            raise ValueError(_format_invalid_rows(path, column, invalid.index.tolist()))
+
+
 def _read_training_frame(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     raw_required = RAW_FEATURE_COLUMNS + [MODEL_TARGET_COLUMN]
@@ -80,6 +112,7 @@ def _read_training_frame(path: Path) -> pd.DataFrame:
     frame = frame.dropna(subset=[MODEL_TARGET_COLUMN]).reset_index(drop=True)
     if len(frame) == 0:
         raise ValueError(f"{path.name} 无有效样本，无法训练")
+    _validate_training_frame(frame, path)
 
     if LABEL_SOURCE_COLUMN in frame.columns:
         frame[LABEL_SOURCE_COLUMN] = frame[LABEL_SOURCE_COLUMN].fillna(

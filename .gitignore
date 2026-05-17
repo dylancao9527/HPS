@@ -39,6 +39,7 @@ backend/static/
 /output/*
 /scripts/*
 /backend/ml_models/
+backend/ml_models_previous/
 /docs/model_report.md
 /datasets/training_data_export.csv
 backend/ml_runs

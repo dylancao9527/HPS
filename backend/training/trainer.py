@@ -214,6 +214,20 @@ def _split_threshold_valid(
     )
 
 
+def split_threshold_holdout(
+    X_train,
+    y_train,
+    random_seed: int = SEED,
+    test_size=THRESHOLD_VALID_SIZE,
+):
+    return _split_threshold_valid(
+        X_train,
+        y_train,
+        random_seed=random_seed,
+        test_size=test_size,
+    )
+
+
 def apply_missing_value_strategy(
     X_fit,
     named_frames,

@@ -1,3 +1,5 @@
+import pytest
+
 from training.ml_schema import BASE_TRAINING_DATASET, EXPORT_DATASET
 from training import data
 
@@ -85,3 +87,37 @@ def test_dataset_hash_is_stable_across_training_seed(monkeypatch, tmp_path):
     _, _, _, _, seed_99_summary = data.prepare_lgbm_data(random_seed=99)
 
     assert seed_7_summary["dataset_hash"] == seed_99_summary["dataset_hash"]
+
+
+def test_prepare_lgbm_data_rejects_non_binary_target(monkeypatch, tmp_path):
+    (tmp_path / BASE_TRAINING_DATASET).write_text(
+        "\n".join(
+            [
+                "male,age,currentSmoker,cigsPerDay,BPMeds,diabetes,totChol,sysBP,diaBP,BMI,heartRate,glucose,Risk",
+                "1,56,0,0,0,0,210,142,91,27.3,78,105,2",
+                "0,43,0,0,0,0,188,118,76,22.5,72,92,0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(data, "DATASETS_DIR", tmp_path)
+
+    with pytest.raises(ValueError, match="Risk"):
+        data.prepare_lgbm_data(random_seed=7)
+
+
+def test_prepare_lgbm_data_rejects_out_of_range_feature(monkeypatch, tmp_path):
+    (tmp_path / BASE_TRAINING_DATASET).write_text(
+        "\n".join(
+            [
+                "male,age,currentSmoker,cigsPerDay,BPMeds,diabetes,totChol,sysBP,diaBP,BMI,heartRate,glucose,Risk",
+                "1,56,0,0,0,0,210,30,91,27.3,78,105,1",
+                "0,43,0,0,0,0,188,118,76,22.5,72,92,0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(data, "DATASETS_DIR", tmp_path)
+
+    with pytest.raises(ValueError, match="sysBP"):
+        data.prepare_lgbm_data(random_seed=7)
