@@ -357,13 +357,13 @@ LightGBM 风险分类模块接收用户个人风险因素和 Prophet 预测期�
 
 7 天风险预测页用于展示预测前数据准备状态和预测入口。
 
-![图4-5 7 天风险预测页面](./thesis-assets/screenshots/figure-4-8-risk-prediction-page.png)
+![图4-5 7 天风险预测页面](./thesis-assets/screenshots/figure-4-5-risk-prediction-page.png)
 
 如图 4-5 所示，预测页强调 7 天预测能力，并根据风险因素档案和血压记录状态给出可行动提示。若最低数据条件不足，系统不会直接输出风险结果，而是提示用户继续完善风险因素或补充血压记录。该页面体现了双模型预测前的数据入口和校验过程。
 
 预测结果页展示双模型预测输出。
 
-![图4-6 7 天风险预测结果页面](./thesis-assets/screenshots/figure-4-9-prediction-result-page.png)
+![图4-6 7 天风险预测结果页面](./thesis-assets/screenshots/figure-4-6-prediction-result-page.png)
 
 如图 4-6 所示，预测结果包括高血压风险概率、风险等级、未来 7 天血压趋势图和指南型健康建议。其中，血压趋势来自 Prophet 预测结果，风险概率来自 LightGBM 原始概率及趋势融合后的结果。该页面只展示普通用户能够理解的预测摘要，不展开模型输入快照、数据库字段或后台治理信息。
 
