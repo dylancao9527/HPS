@@ -457,10 +457,6 @@ bpmeds_observed 的 AUC 为 0.9555，在六组实验中最高，但 TP 只有 20
 
 该选择并不追求某一项排序指标单独最高，而是因为 recall-min85 在 Recall 和 F1 上同时表现最好，Precision、AUC、PR-AUC 和 Brier Score 也保持在较合理范围内，减少高风险样本漏判，更符合短期健康提醒和持续监测的应用定位。
 
-#### 5.2.4 本节小结
-
-本节在 recall_priority 阈值策略下，对最小召回率、学习率、缺失值策略和用药字段处理方式进行对照实验，recall-min85 在测试集上达到 AUC 0.9498、PR-AUC 0.8706、Precision 0.8246、Recall 0.8935、F1 0.8577，FN 控制在 28 个，结合健康风险提醒定位，选择 threshold_search_mode=recall_priority 且 threshold_min_recall=0.85 的 LightGBM 模型作为生产模型。
-
 ### 5.3 特征重要性分析
 
 LightGBM 可以输出基于 gain 的特征重要性，用来观察不同输入特征对分类结果的贡献，主要特征的重要性占比见表 5-5。
