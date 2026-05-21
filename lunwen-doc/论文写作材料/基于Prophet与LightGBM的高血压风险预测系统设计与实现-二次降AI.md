@@ -2,21 +2,21 @@
 
 ## 摘要
 
-高血压是慢性病管理中的高频问题，家庭血压计和健康平台持续沉淀个人测量记录，许多记录仍主要服务于保存与查询，近期血压走向、短期风险提醒、预测依据解释没有真正进入日常使用，普通用户虽然能看到一串数值，却未必能判断收缩压和舒张压的波动是否已经需要关注。
+高血压是开展慢性病管理的高频问题，家庭血压计以及健康平台持续沉淀了大量的个人测量记录，许多记录仍然主要去服务于数据的保存以及查询。近期血压走向、短期风险提醒以及预测依据解释没有真正进入日常使用当中，普通用户虽然可以看到一串数值，却未必能判断收缩压以及舒张压的波动是不是已经需要关注了。
 
-本文设计并实现基于 Prophet 与 LightGBM 的高血压风险预测辅助系统，用户血压数据按自然日整理为日均序列，Prophet 生成未来 7 天收缩压和舒张压趋势，预测期血压均值等特征与年龄、BMI、吸烟、用药、糖尿病等风险因素合并后输入 LightGBM，系统给出高血压风险概率及等级。
+本文设计并且得以实现了基于Prophet以及LightGBM来开展的高血压风险预测辅助系统。会把用户血压数据按自然日整理为日均序列，Prophet生成未来7天的收缩压以及舒张压趋势。预测期血压均值等特征跟年龄、BMI、吸烟、用药以及糖尿病等风险因素合并后输入LightGBM当中，系统便会给出高血压风险概率以及等级。
 
-实验结果表明，参数调整后的 LightGBM 在公开健康检查数据集上具有较好的分类表现，血压特征在模型判断中占主要权重，Prophet 回测和趋势融合结果显示，短期血压走势能够转化为风险分类输入，并在原始概率基础上形成幅度受限、原因可追溯的修正，本文方法可为短期健康管理提供参考，不用于替代临床诊断与治疗决策。
+实验结果表明，进行参数调整的LightGBM在公开健康检查数据集上有着较好的分类表现，血压特征在开展模型判断时占了主要权重。Prophet回测以及趋势融合的结果显示，能够把短期血压走势转化为风险分类的输入，并且在原始概率基础上形成幅度受限、缘由可追溯的修正。本文方法可为短期的健康管理提供参考，但不适宜去替代临床诊断以及治疗决策。
 
 **关键词**：高血压风险预测；Prophet；LightGBM；时间序列预测；健康管理系统
 
 ## Abstract
 
-Hypertension is a high-frequency issue in chronic disease management, and home blood pressure monitors together with health platforms continue to accumulate personal measurement records. Many records still mainly serve storage and query needs, while recent blood pressure trends, short-term risk reminders, and explanations of prediction results have not been fully integrated into daily use, so ordinary users may see a series of values but still find it difficult to judge whether the fluctuation of systolic and diastolic blood pressure already deserves attention.
+Hypertension frequently acts as a common issue in chronic disease management. Home blood pressure monitors, alongside health platforms, keep accumulating personal measurement records. Many records still primarily serve basic storage and querying needs. Meanwhile, recent blood pressure trends, short-term risk reminders, along with prediction result explanations, have not really entered daily use. Thus, ordinary users might see a series of values, yet still find it quite hard to properly judge if systolic and diastolic blood pressure fluctuations actually require attention.
 
 This paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM. User blood pressure data are organized into daily average sequences by natural day, Prophet generates the seven-day trends of systolic and diastolic blood pressure, and features such as predicted blood pressure averages are combined with risk factors including age, BMI, smoking, medication use, and diabetes before being fed into LightGBM, which outputs the hypertension risk probability and risk level.
 
-Experimental results show that the parameter-tuned LightGBM model achieves good classification performance on a public health-check dataset, with blood pressure features carrying the main weight in model decisions. Prophet back-testing and trend-fusion results show that short-term blood pressure trends can be transformed into risk classification inputs and can form bounded, traceable adjustments on the original probability, making the proposed method suitable for short-term health management reference rather than a substitute for clinical diagnosis or treatment decisions.
+Experimental results indicate the parameter-tuned LightGBM model manages to achieve good classification performance within a public health-check dataset, where blood pressure features actually carry the main weight during model decisions. Furthermore, Prophet back-testing alongside trend-fusion results demonstrate short-term blood pressure trends can easily be converted into risk classification inputs, forming bounded, traceable adjustments upon the original probability. Consequently, the proposed method is quite suitable for short-term health management reference, rather than substituting actual clinical diagnosis or treatment decisions.
 
 **Key words**: hypertension risk prediction; Prophet; LightGBM; time series forecasting; health management system
 
@@ -24,21 +24,23 @@ Experimental results show that the parameter-tuned LightGBM model achieves good 
 
 ### 1.1 研究背景及意义
 
-高血压长期处在我国慢性病防控和心血管健康管理的核心位置，血压持续偏高会推高心脑血管事件发生概率，还会改变居民日常测量、用药和就医决策，疾病早期往往缺少明显不适，许多用户只有在体检、复诊或偶然测量时才意识到血压异常，管理过程容易受到记录不连续、风险感知不足和干预时机滞后的影响，中国高血压防治指南 2024 年修订版对血压分级、生活方式干预和健康管理给出系统建议<sup>1</sup>，中国高血压健康管理规范 2019、国家基层高血压防治管理指南 2020 版将连续监测、风险评估和规范随访列为基层管理的重要内容<sup>2-3</sup>，中国心血管健康与疾病报告 2023 概要提示，心血管疾病防控压力仍然存在，高血压管理质量会影响居民长期健康水平<sup>4</sup>。
+**修改后：**
 
-家庭血压计、可穿戴设备和互联网健康平台进入日常生活后，普通用户记录血压的门槛明显降低，和门诊中的单次测量相比，连续记录更容易暴露一段时间内的变化方向、波动幅度和异常升高，早晚测量差异、短期反复偏高、服药后仍未控制等现象也能在记录中留下痕迹，相关规范提出的连续监测与风险评估要求更容易落到个人管理场景<sup>2-3</sup>，现实使用中，不少系统仍主要提供保存、查询和统计功能，历史数据被完整留下，近期血压是否正在抬升、未来几天是否需要加强观察，用户往往还要自己判断。
+高血压长期处在我国慢性病防控以及心血管健康管理的核心位置。血压持续偏高会把心脑血管事件的发生概率推高，同时还会去改变居民日常的测量、用药以及就医决策。由于疾病早期往往缺少明显的不适，许多用户只有在去进行体检、复诊或者偶然测量时才会意识到血压出现了异常。这个管理的过程很容易受到记录不连续、风险感知不足以及干预时机滞后等方面的影响。中国高血压防治指南2024年修订版对血压分级、生活方式干预以及健康管理给出了系统的建议[1]。中国高血压健康管理规范2019以及国家基层高血压防治管理指南2020版把连续监测、风险评估以及规范随访列为了基层管理的重要内容[2][3]。同时，中国心血管健康以及疾病报告2023概要也提示，心血管疾病防控的压力仍然存在，高血压的管理质量会去影响居民长期的健康水平[4]。
 
-现有健康管理系统通常以用户档案、血压记录和后台维护为主要功能，基础数据管理可以完成，数据中隐藏的风险信号却没有被充分提取，已有研究认为，高血压风险判断需要同时纳入人口学特征、生活方式、血压指标和代谢指标等变量<sup>5</sup>，年龄、BMI、吸烟、用药、糖尿病等相对稳定因素会影响风险，近期收缩压和舒张压的变化方向同样会改变判断结果，若只依赖静态档案或最近一次测量值，连续记录中的趋势信息容易被丢失，若只给出趋势曲线，普通用户又未必能把曲线变化理解为风险提醒，系统也很难说明风险概率为何升高、哪些血压变化参与了判断、用户下一步应当把注意力放在复测、生活方式还是就医咨询上，血压趋势预测与结构化风险分类之间需要更清晰的模型衔接。
+家庭血压计、可穿戴设备以及互联网健康平台进入到日常生活之后，普通用户开展血压记录工作的门槛有了明显降低。跟门诊当中的单次测量相比较，连续的记录能够更容易地暴露一段时间内的变化方向、波动幅度以及异常的升高。早晚的测量差异、短期的反复偏高、服药之后仍然未得到控制等现象也可以在记录当中留下痕迹。相关规范所提出的连续监测以及风险评估要求可以更容易地落到个人的管理场景当中[2][3]。在现实的使用当中，不少系统仍然主要拥有保存、查询以及统计的功能。虽然历史数据被完整地留下来了，但近期血压是不是正在抬升、未来几天是不是需要去加强观察，往往还会需要用户自己去进行判断。
 
-本文以 Prophet 与 LightGBM 构建高血压风险预测辅助系统，用户连续血压记录按自然日整理后进入趋势预测流程，未来 7 天血压变化不再停留为历史数据的外推曲线，而是被提取为可进入分类模型的血压特征，系统结合个人风险因素输出高血压风险概率和等级，这一设计把零散记录、短期趋势和风险判断放入同一条计算流程，使用户能够更早注意异常变化，并据此调整记录习惯、复测频率和健康管理行为，也使健康平台从单纯的数据留存工具进一步转向可解释的辅助提醒工具。
+现有的健康管理系统通常把用户档案、血压记录以及后台维护当作主要功能来使用。虽然基础的数据管理工作可以完成，但是数据当中隐藏的风险信号却并没有被充分地提取出来。已有的研究认为，高血压风险的判断需要同时纳入人口学特征、生活方式、血压指标以及代谢指标等变量[5]。年龄、BMI、吸烟、用药以及糖尿病等相对稳定的因素会去影响风险，近期的收缩压以及舒张压的变化方向同样也会改变判断的结果。如果只去依赖静态的档案或者是最近一次的测量值，连续记录当中的趋势信息就很容易丢失。要是只给出趋势曲线，普通用户又未必能把曲线变化理解为一种风险提醒。这样，系统也很难去说明风险概率升高的缘由主要囊括哪些、哪些血压变化参与了判断，以及用户下一步应当把注意力放在复测、生活方式还是就医咨询方面。那么，血压趋势预测以及结构化风险分类之间便需要进行更清晰的模型衔接。
 
-本文把研究重点放在模型衔接和结果解释，Prophet 从个人血压序列中提取预测期血压特征，LightGBM 将这些特征与结构化风险因素共同用于分类，两类模型串联后可以同时利用时间序列信息和个人档案信息，风险概率、血压趋势、置信度说明和指南型建议组成结果解释，单独的模型分数在这些信息配合下更容易被理解，从系统实现角度看，该思路也有利于把时间序列预测、表格分类、结果展示和健康建议组织成较完整的工程闭环，为后续接入更多风险因素、优化阈值策略和开展人群外部验证留下扩展空间，系统定位为健康管理辅助工具，预测结果只提示近期血压变化和相关风险因素，不替代临床诊断、处方或治疗决策。
+本文运用Prophet以及LightGBM来开展高血压风险预测辅助系统的构建工作。用户的连续血压记录按自然日整理之后便会进入到趋势预测的流程当中。未来7天的血压变化不会再仅仅停留为历史数据的外推曲线，而是会被提取为可以进入分类模型当中的血压特征。系统结合个人的风险因素来输出高血压风险的概率以及等级。这个设计会把零散的记录、短期的趋势以及风险的判断放入到同一条计算流程当中，从而让用户可以更早地去注意异常的变化，并且凭借此来调整记录习惯、复测频率以及健康管理行为。同时这也让健康平台从单纯的数据留存工具进一步转向了可解释的辅助提醒工具。
+
+本文会把研究重点放在模型的衔接以及结果解释方面。Prophet从个人的血压序列当中去提取预测期的血压特征。LightGBM会把这些特征以及结构化的风险因素共同用于开展分类工作。两类模型串联之后，可以同时去借助时间序列信息以及个人档案信息。风险概率、血压趋势、置信度说明以及指南型建议共同组成了结果解释，单独的模型分数在这些信息的配合之下能够更容易地被理解。从系统实现的角来看，这个思路也有利于把时间序列预测、表格分类、结果展示以及健康建议组织成一个较完整的工程闭环，从而为后续接入更多的风险因素、去进行阈值策略的优化以及开展人群的外部验证留下扩展空间。系统被定位为健康管理辅助工具，它的预测结果只会提示近期的血压变化以及相关的风险因素，并不能去替代临床的诊断、处方或者治疗的决策。
 
 ### 1.2 国内外研究现状
 
 #### 1.2.1 国内研究现状
 
-国内高血压风险预测研究已经从经验判断逐步转向数据建模，相关综述认为，高血压风险评估需要纳入人口学特征、生活方式、血压指标和代谢指标等变量⁵，单次血压测量值或单一生活习惯变量难以完整反映个体状态，钢铁工人高血压风险预测模型研究比较了多种机器学习模型，并使用 AUC、F1、Brier Score 等指标评价模型表现⁶，冠心病风险预测模型构建研究也显示，机器学习可用于心血管疾病风险识别，类别不平衡处理、模型选择和多指标评价会影响结论可信度⁸。
+国内高血压风险预测研究已从经验判断逐步转向去开展数据建模工作，相关综述认为，高血压风险评估需把人口学特征、生活方式、血压以及代谢指标等变量纳入其中[5]，单次血压测量值或单一生活习惯变量很难去完整反映个体的状态，钢铁工人高血压风险预测模型研究比较了多种机器学习模型，并且运用AUC、F1、BrierScore等指标来评价模型表现[6]，同时冠心病风险预测模型构建研究也显示，能把机器学习用于心血管疾病风险的识别工作，类别不平衡的处理、模型选用以及多指标评价都会去影响结论可信度[8]。
 
 国内慢性病预测研究还把体检指标、基层健康评估和时间序列方法纳入建模讨论，体检人群糖尿病风险预测研究说明，常规体检指标可以构建风险评估模型⁹，SARIMA 与 Prophet 混合算法研究说明 Prophet 在时间序列预测任务中有较好的工程适配性¹¹，基层医生高血压健康评估相关研究提示，风险评估结果需要转化为用户能够理解并执行的管理建议¹²，这些成果为本文使用用户风险因素档案、血压相关指标和短期趋势预测提供了参照，现有研究对连续血压记录中的时间变化利用仍不充分，可解释机器学习研究表明，特征重要性和模型解释可以提高疾病预测结果的可理解性¹⁰，静态特征解释却很难回答近期血压变化带来的疑问。
 
@@ -46,29 +48,27 @@ Experimental results show that the parameter-tuned LightGBM model achieves good 
 
 国外研究较早关注基于易采集风险因素的高血压预测，相关研究表明，年龄、体重、生活方式等普通用户能够提供的变量可以用于机器学习建模⁷，这类方法降低了数据采集门槛，也更接近健康平台和基础筛查场景中的实际数据条件，对于面向普通用户的风险预测系统具有较强参考价值。
 
-Prophet 原始论文提出面向大规模预测任务的加性时间序列模型，可以用趋势项、季节项和事件项描述序列变化¹⁴，LightGBM 原始论文提出高效梯度提升决策树框架，通过直方图算法和叶子优先生长策略提升结构化数据建模效率¹⁵，前者适合处理时间序列趋势，后者适合处理表格特征，这正好对应本文要连接的两个环节。
+Prophet原始论文提出了面向大规模预测任务的加性时间序列模型，可以借助趋势项、季节项以及事件项来进行序列变化的描述[14]。LightGBM原始论文提出了高效的梯度提升决策树框架，依靠直方图算法以及叶子优先生长策略来提升结构化数据的建模效率[15]。前者适宜去处理时间序列趋势方面的工作，后者则适宜去处理表格特征，这个正好契合了本文所要连接的两个环节。
 
-国外健康管理系统研究也更加重视结果呈现和用户理解，高血压可视化风险预测系统研究显示，机器学习风险预测与可视化界面结合后，用户更容易理解风险结果和相关影响因素¹³，模型输出不能只停留在概率或类别标签层面，还需要把影响因素、趋势变化和健康建议一并呈现，才能服务于真实健康管理场景。
+国外健康管理系统的研究也更加重视结果的呈现以及用户的理解。高血压可视化风险预测系统研究显示，把机器学习风险预测以及可视化界面进行结合之后，用户能够更容易地去理解风险结果以及相关的影响因素[13]。模型的输出不能仅仅停留在概率或者类别标签的层面，还需要把影响因素、趋势变化以及健康建议一并呈现出来，这样才可以真正去服务于现实的健康管理场景。
 
 #### 1.2.3 本论文研究切入点
 
-国内外研究已经说明静态风险因素、表格分类模型、时间序列预测和可视化解释各自具有可行性，本文回到普通用户连续血压记录这一应用场景，更关注这些方法在高血压风险预测系统中的衔接方式，也就是家庭血压记录怎样从历史数据变成短期趋势，短期趋势怎样进入风险分类模型，模型结果又怎样转化为用户能够理解的风险概率、等级和建议。
+国内外研究已经说明了静态风险因素、表格分类模型、时间序列预测以及可视化解释各自具备可行性。本文回到了普通用户连续血压记录的这个应用场景当中，更加去关注这些方法在高血压风险预测系统里的衔接方式，也就是家庭血压记录怎样从历史数据变成短期趋势，短期趋势怎样进入到风险分类模型，同时模型结果又怎样转化为用户能够理解的风险概率、等级以及建议。
 
-本文系统以 Prophet 处理个人血压时间序列，以 LightGBM 完成结构化风险分类，用户血压记录按自然日聚合后生成未来 7 天趋势特征，再与年龄、BMI、吸烟、用药、糖尿病等风险因素共同进入分类流程，趋势融合模块在原始概率基础上进行幅度受限、原因可追溯的修正，研究重点由单一模型性能比较转向双模型流程设计、预测期特征衔接和结果解释，使系统更贴近短期健康管理中的实际使用需求。
+本文系统运用Prophet去处理个人血压时间序列，并且借助LightGBM来完成结构化风险分类工作。用户血压记录按自然日聚合之后会生成未来7天的趋势特征，然后再把它们跟年龄、BMI、吸烟、用药以及糖尿病等风险因素共同放入分类流程当中。趋势融合模块会在原始概率的基础上来进行幅度受限、缘由可追溯的修正。研究重点由开展单一模型性能比较转向了双模型流程的设计、预测期特征的衔接以及结果解释，从而使得系统更契合短期健康管理当中的实际使用需求。
 
 ### 1.3 研究方法与内容
 
-本文围绕 Prophet 血压趋势预测、LightGBM 风险分类和趋势融合开展研究与实现，文献分析用于梳理高血压风险预测、时间序列预测和机器学习分类的基础，模型设计用于明确 Prophet 与 LightGBM 的输入输出关系，特征构建说明预测期血压特征如何进入风险分类模型，实验评估检验 LightGBM 分类效果和 Prophet 预测误差，场景分析观察趋势融合对不同血压变化情况的影响。
+本文围绕Prophet血压趋势预测、LightGBM风险分类以及趋势融合来开展研究并且得以实现。文献分析被用于去梳理高血压风险预测、时间序列预测以及机器学习分类的基础，模型的设计用于去明确Prophet以及LightGBM的输入输出关系。特征构建方面说明了预测期的血压特征是如何进入到风险分类模型当中的，实验评估检验了LightGBM的分类效果以及Prophet的预测误差，场景分析则去观察了趋势融合对不同血压变化情况所产生的影响。以下便是本文的主要工作。
 
-本文主要工作包括以下几个方面。
+本文开展了双模型预测流程的构建工作。用户的历史血压记录会按自然日被聚合为每日的血压序列，Prophet会去预测未来7天的收缩压以及舒张压。预测期的血压均值会进入到LightGBM风险分类输入当中，从而使得模型既能去运用静态的风险因素，同时也能去纳入短期的血压趋势。
 
-本文构建了双模型预测流程，用户历史血压记录按自然日聚合为每日血压序列，Prophet 预测未来 7 天收缩压和舒张压，预测期血压均值进入 LightGBM 风险分类输入，使模型既能利用静态风险因素，也能纳入短期血压趋势。
+在预测期特征衔接以及趋势融合方面，本文把风险因素以及历史血压记录当作输入来使用，由Prophet去生成未来7天的收缩压以及舒张压趋势。然后再去提取预测期均值等血压特征，让其进入到LightGBM分类模型当中，趋势信号则用于对原始的风险概率来进行受约束的修正工作。
 
-在预测期特征衔接与趋势融合方面，本文以风险因素和历史血压记录作为输入，由 Prophet 生成未来 7 天收缩压和舒张压趋势，再提取预测期均值等血压特征进入 LightGBM 分类模型，趋势信号用于对原始风险概率进行受约束修正。
+模型训练以及实验分析选用公开数据文件Hypertension-risk-model-main.csv当中的4240条样本来完成。LightGBM的结果借助Accuracy、AUC、Precision、Recall、F1、PR-AUC、BrierScore以及混淆矩阵来进行评价。特征重要性分析则被用于去说明血压预测特征在风险分类当中的贡献。
 
-模型训练与实验分析使用公开数据文件 `Hypertension-risk-model-main.csv` 中的 4240 条样本完成，LightGBM 结果通过 Accuracy、AUC、Precision、Recall、F1、PR-AUC、Brier Score 和混淆矩阵评价，特征重要性分析用于说明血压预测特征在风险分类中的贡献。
-
-趋势融合与模型结果分析基于 Prophet 预测结果构造高血压天数、血压峰值、趋势方向和用药未控制等信号，LightGBM 原始概率在这些信号作用下进行受约束修正，典型场景分析用于说明修正幅度和触发原因。
+趋势融合以及模型结果分析基于Prophet预测结果来开展，去构造高血压天数、血压峰值、趋势方向以及用药未控制等信号。LightGBM的原始概率会在这些信号的作用之下进行受约束的修正，典型的场景分析被用于去说明修正幅度以及触发的具体缘由。
 
 ## 第2章 相关理论介绍
 
