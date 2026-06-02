@@ -12,11 +12,7 @@
 
 ## Abstract
 
-Hypertension frequently acts as a common issue in chronic disease management. Home blood pressure monitors, alongside health platforms, keep accumulating personal measurement records. Many records still primarily serve basic storage and querying needs. Meanwhile, recent blood pressure trends, short-term risk reminders, along with prediction result explanations, have not really entered daily use. Thus, ordinary users might see a series of values, yet still find it quite hard to properly judge if systolic and diastolic blood pressure fluctuations actually require attention.
-
-This paper designs and implements a hypertension risk prediction assistance system based on Prophet and LightGBM. User blood pressure data are organized into daily average sequences by natural day, Prophet generates the seven-day trends of systolic and diastolic blood pressure, and features such as predicted blood pressure averages are combined with risk factors including age, BMI, smoking, medication use, and diabetes before being fed into LightGBM, which outputs the hypertension risk probability and risk level.
-
-Experimental results indicate the parameter-tuned LightGBM model manages to achieve good classification performance within a public health-check dataset, where blood pressure features actually carry the main weight during model decisions. Furthermore, Prophet back-testing alongside trend-fusion results demonstrate short-term blood pressure trends can easily be converted into risk classification inputs, forming bounded, traceable adjustments upon the original probability. Consequently, the proposed method is quite suitable for short-term health management reference, rather than substituting actual clinical diagnosis or treatment decisions.
+Hypertension frequently acts as a common issue in chronic disease management. Home blood pressure monitors, alongside health platforms, keep accumulating personal measurement records. Many records still primarily serve basic storage and querying needs. Meanwhile, recent blood pressure trends, short-term risk reminders, along with prediction result explanations, have not really entered daily use. Thus, ordinary users might see a series of values, yet still find it quite hard to properly judge if systolic and diastolic blood pressure fluctuations actually require attention. This paper manages to design and implement a hypertension risk prediction assistance system based on Prophet alongside LightGBM. User blood pressure data get organized into daily average sequences on a natural day basis, while Prophet generates the seven-day trends for both systolic and diastolic blood pressure. Furthermore, features such as predicted blood pressure averages get combined with risk factors—including age, BMI, smoking, medication use, alongside diabetes—before actually being fed into LightGBM, which in turn outputs the specific hypertension risk probability and the corresponding risk level. Experimental results indicate the parameter-tuned LightGBM model manages to achieve good classification performance within a public health-check dataset, where blood pressure features actually carry the main weight during model decisions. Furthermore, Prophet back-testing alongside trend-fusion results demonstrate short-term blood pressure trends can easily be converted into risk classification inputs, forming bounded, traceable adjustments upon the original probability. Consequently, the proposed method is quite suitable for short-term health management reference, rather than substituting actual clinical diagnosis or treatment decisions.
 
 **Key words**: hypertension risk prediction; Prophet; LightGBM; time series forecasting; health management system
 
@@ -48,13 +44,13 @@ Experimental results indicate the parameter-tuned LightGBM model manages to achi
 
 Prophet原始论文提出了面向大规模预测任务的加性时间序列模型，可以借助趋势项、季节项以及事件项来进行序列变化的描述[14]。LightGBM原始论文提出了高效的梯度提升决策树框架，依靠直方图算法以及叶子优先生长策略来提升结构化数据的建模效率[15]。前者适宜去处理时间序列趋势方面的工作，后者则适宜去处理表格特征，这个正好契合了本文所要连接的两个环节。
 
-国外健康管理系统的研究也更加重视结果的呈现以及用户的理解。高血压可视化风险预测系统研究显示，把机器学习风险预测以及可视化界面进行结合之后，用户能够更容易地去理解风险结果以及相关的影响因素[13]。模型的输出不能仅仅停留在概率或者类别标签的层面，还需要把影响因素、趋势变化以及健康建议一并呈现出来，这样才可以真正去服务于现实的健康管理场景。
+国外健康管理系统的研究也更加注重结果的展现以及用户的理解。高血压可视化风险预测系统研究表明，把机器学习风险预测以及可视化界面进行结合后，用户能够更加容易地去理解风险结果以及相关的影响因素[13]。模型的输出不能只停留在概率或者类别标签这个层面，还需要把影响因素、趋势变化以及健康建议一并展现出来，这样才可以真正服务于现实当中的健康管理场景。
 
 #### 1.2.3 本论文研究切入点
 
 国内外研究已经说明了静态风险因素、表格分类模型、时间序列预测以及可视化解释各自具备可行性。本文回到了普通用户连续血压记录的这个应用场景当中，更加去关注这些方法在高血压风险预测系统里的衔接方式，也就是家庭血压记录怎样从历史数据变成短期趋势，短期趋势怎样进入到风险分类模型，同时模型结果又怎样转化为用户能够理解的风险概率、等级以及建议。
 
-本文系统运用Prophet去处理个人血压时间序列，并且借助LightGBM来完成结构化风险分类工作。用户血压记录按自然日聚合之后会生成未来7天的趋势特征，然后再把它们跟年龄、BMI、吸烟、用药以及糖尿病等风险因素共同放入分类流程当中。趋势融合模块会在原始概率的基础上来进行幅度受限、缘由可追溯的修正。研究重点由开展单一模型性能比较转向了双模型流程的设计、预测期特征的衔接以及结果解释，从而使得系统更契合短期健康管理当中的实际使用需求。
+本文系统选用Prophet来进行个人血压时间序列的处理，并且借助LightGBM来实现结构化风险分类工作。在用户的血压记录按照自然日进行聚合之后，会生成未来7天的趋势特征，然后会把它们以及年龄、BMI、吸烟、用药以及糖尿病等风险因素共同放入分类流程当中。同时，趋势融合模块会基于原始概率来开展幅度受限以及缘由可追溯的修正工作。研究重点由开展单一模型性能的比较转向了双模型流程的设计、预测期特征的衔接以及结果的解释方面，这样使得系统能够更加契合短期健康管理当中的实际使用需求。
 
 ### 1.3 研究方法与内容
 
@@ -72,7 +68,7 @@ Prophet原始论文提出了面向大规模预测任务的加性时间序列模�
 
 ### 2.1 时间序列预测
 
-时间序列预测借助时间排列的历史观测值去估计后续变化，血压记录中测量时间、收缩压、舒张压以及心率并非孤立字段，把它按日期整理会形成连续序列，近期血压水平、波动幅度以及变化方向都会去影响未来短期风险判断，这与普通表格分类特征不同。
+时间序列预测凭借按照时间排列的历史观测值来进行后续变化的估计，血压记录当中的测量时间、收缩压、舒张压以及心率并非孤立的字段，把它按照日期进行整理后会形成连续的序列，同时近期的血压水平、波动幅度以及变化方向都会对未来短期风险判断产生影响，这与普通表格分类特征是有所不同的。
 
 从数学形式看，若用户共有 $T$ 个按时间排序的血压观测点，可以将其表示为一个时间序列：
 
@@ -90,7 +86,7 @@ Prophet原始论文提出了面向大规模预测任务的加性时间序列模�
 
 式中，$\widehat{y}_{T+h}$ 表示未来第 $h$ 个时间点的预测值，$p$ 表示模型使用的历史窗口长度，$H$ 表示预测步长。本文将 $H$ 取为 7，用用户近期血压记录估计未来 7 天收缩压和舒张压变化，目的不是判断长期疾病结局，而是给后续风险分类提供更贴近当前状态的血压特征。
 
-实际血压序列通常不会完全平稳，长期升降趋势以及短期重复波动、测量误差会同时存在，为方便开展后续说明，可把单变量时间序列去简化分解为：
+实际的血压序列通常不会是完全平稳的，长期的升降趋势以及短期的重复波动、测量误差会同时存在，为了方便去开展后续的说明工作，可以把单变量时间序列进行简化分解为：
 
 |  |  |
 |:---:|---:|
@@ -98,14 +94,14 @@ Prophet原始论文提出了面向大规模预测任务的加性时间序列模�
 
 式中，$\tau_t$ 表示趋势项，用于描述整体上升或下降方向，$s_t$ 表示周期项或重复波动，$r_t$ 表示随机扰动和模型尚未解释的部分。健康管理场景下，用户测量时间不一定固定，记录频率也可能不均衡，建模前需要先做聚合与清洗，本文将同一自然日内的一条或多条血压记录整理为日均收缩压和日均舒张压，使 Prophet 输入序列更稳定。
 
-时间序列预测在本文系统中的基本处理流程如图2-1所示，把原始血压记录按时间排序后放入自然日聚合环节，Prophet去生成未来7天血压趋势，预测期均值等结果再转换为LightGBM所需血压特征。
+时间序列预测在本系统当中的基本流程如图2-1所示，把原始血压记录按时间排序，并且放入自然日聚合环节，运用Prophet来生成未来7天的血压趋势，预测期均值等结果再转化为LightGBM所需的血压特征。
 
 ![图2-1 时间序列预测基本流程示意图](./thesis-assets/diagrams/figure-2-1-time-series-forecasting-flow.svg)
 
 本文的时间序列预测任务并非去预测长期疾病结局，而是依据用户近期血压记录去生成未来7天的血压趋势。预测结果本身不会直接构成高血压风险结论，而是被转换为LightGBM预测期血压特征。这样能避免运用最近一次血压值开展静态分类，并且让系统展示未来血压走势，来增强结果的解释性。
 ### 2.2 Prophet模型
 
-Prophet是面向时间序列预测的加性模型，适宜去处理具趋势、周期以及异常波动的数据。它基本思想是把时间序列拆分成趋势、周期、事件影响以及随机误差等可解释成分。基本形式能表示为：
+Prophet作为面向时间序列预测的加性模型，非常适宜去处理具有趋势、周期以及异常波动的数据。它的基本思想在于把时间序列拆分为趋势、周期、事件影响以及随机误差等可解释成分。其基本形式可以表示为：
 
 |  |  |
 |:---:|---:|
@@ -119,13 +115,13 @@ Prophet是面向时间序列预测的加性模型，适宜去处理具趋势、�
 
 式中，$k$ 为基础增长率，$m$ 为偏置项，$a(t)$ 表示时间 $t$ 是否经过候选变化点的指示向量，$\delta$ 表示变化点前后趋势斜率调整量，$\gamma$ 用于保证趋势函数在变化点处连续。本文场景关注个人近期血压变化，Prophet 主要承担趋势建模任务，它的输出不被解释为临床结论。
 
-图2-2给出了Prophet在本文的计算位置，先把原始血压记录聚合为每日收缩压以及舒张压序列，再进入Prophet加性模型，趋势项、周期项、事件项以及误差项共同去描述序列变化，来输出未来血压趋势。系统不会把该趋势直接当作高血压结论，而是去提取预测期均值、峰值、斜率以及高血压天数等特征，供LightGBM风险分类去选用。
+图2-2给出了Prophet在本文当中的计算位置，先把原始血压记录聚合成每日收缩压以及舒张压序列，再进入Prophet加性模型，趋势项、周期项、事件项以及误差项共同去描述序列变化，来输出未来血压趋势。系统并不会把这个趋势直接当作高血压结论来使用，而是去提取预测期均值、峰值、斜率以及高血压天数等特征，供LightGBM风险分类选用。
 
 ![图2-2 Prophet 模型原理图](./thesis-assets/diagrams/figure-2-2-prophet-principle.png)
 
-Prophet的结构较清楚，输出同时包含未来时间点以及预测值，便于去形成血压趋势曲线。相比直接运用最近一次血压值，Prophet能够根据一段记录去生成未来7天连续趋势，预测期血压均值、高血压天数、峰值以及斜率也会随之得到。普通用户更容易理解短期曲线，LightGBM则会把未来7天预测均值当作结构化输入特征，去参与风险概率的计算。
+Prophet的结构特性较清楚，输出同时包含未来时间点以及预测值，便于进行血压趋势曲线的形成。相比直接运用最近一次血压值，Prophet能基于一段记录来开展未来7天连续趋势的生成，预测期血压均值、高血压天数、峰值以及斜率也随之得以获取。普通用户更容易理解短期曲线，LightGBM则会把未来7天预测均值当作结构化输入特征来使用，去参与风险概率计算。
 
-用户发起预测时，系统基于血压历史记录来开展Prophet模型训练或复用。为兼顾预测效果以及交互效率，默认最多选用近90天日均血压数据。要是新增自然日达到阈值就重新开展训练，未达到那就复用已有模型并且去生成新结果。模型资产表仅保存版本、数据签名、训练截止日期以及存储键等信息，训练天数、置信度等级、参数画像以及运行模式随单次记录保存，去解释本次预测。
+用户发起预测时，系统会基于血压历史记录来开展Prophet模型训练或复用。为兼顾预测效果以及交互效率，默认最多选用近90天的日均血压数据。如果新增自然日达到阈值就重新开展训练，未达到那就复用已有模型并且生成新结果。模型资产表仅保存版本、数据签名、训练截止日期以及存储键等信息，而会把训练天数、置信度等级、参数画像以及运行模式随单次记录进行保存，以此来解释本次预测。
 
 ### 2.3 LightGBM模型
 
@@ -159,7 +155,7 @@ LightGBM 属于梯度提升决策树方法，适合处理用户档案、体检�
 |:---:|---:|
 | $\displaystyle p=P(y=1\mid x)=\frac{1}{1+e^{-F_M(x)}}$ | (9) |
 
-图2-4展示Sigmoid函数概率映射关系，要是模型分数较小，输出概率就靠近低风险区间，分数升高后风险概率会随之增加，LightGBM给出的并非单纯类别标签，而是能去用于阈值搜索、风险分级以及趋势融合的概率值。
+图2-4展示了Sigmoid函数的概率映射关系，如果模型分数较小，输出概率就会靠近低风险区间，分数升高后风险概率也会随之增加。LightGBM给出的并非单纯的类别标签，而是能够用于开展阈值搜索、风险分级以及趋势融合的概率值。
 
 ![图2-4 Sigmoid 概率映射曲线](./thesis-assets/diagrams/figure-2-4-sigmoid-probability-curve.png)
 
@@ -167,7 +163,7 @@ LightGBM 属于梯度提升决策树方法，适合处理用户档案、体检�
 
 LightGBM与普通GBDT相比会有更高的训练效率，对较多特征以及样本有较好适应性，直方图算法、叶子优先生长策略、特征采样以及数据采样是常见优化机制[15]，健康风险预测当中的年龄、BMI、吸烟情况、糖尿病、胆固醇、血糖以及预测期血压均值大多属结构化特征，适宜运用LightGBM去建模。调参时重点调整叶子数、特征采样比例、样本采样比例、正则化系数以及最小叶子样本数，去控制树模型复杂度并且改善查全率以及F1表现。
 
-LightGBM输入含12个核心特征，性别、年龄、吸烟状态、日吸烟支数、降压药选用情况、糖尿病、总胆固醇、预测期收缩压均值、预测期舒张压均值、BMI、心率以及血糖皆在其中，收缩压以及舒张压来自Prophet对未来7天的趋势预测，其他字段源自用户维护的风险因素档案，LightGBM原始概率会再进入趋势融合策略，来形成最终展示的风险概率。
+LightGBM输入拥有12个核心特征，性别、年龄、吸烟状态、日吸烟支数、降压药选用情况、糖尿病、总胆固醇、预测期收缩压均值、预测期舒张压均值、BMI、心率以及血糖皆囊括其中，收缩压以及舒张压来自于Prophet对未来7天开展的趋势预测，其他字段源自用户所维护的风险因素档案，系统会把LightGBM原始概率再次放入趋势融合策略当中，以此来形成最终展示的风险概率。
 
 ### 2.4 本章小结
 
@@ -204,7 +200,7 @@ LightGBM输入含12个核心特征，性别、年龄、吸烟状态、日吸烟�
 
 ### 3.2 数据预处理与特征构建
 
-数据预处理基于字段标准化、缺失值处理、训练测试划分、阈值验证集划分以及预测期血压特征构建来开展，训练阶段主要选用基础训练集，并把系统导出的训练样本当作补充来源，当前模型报告中系统导出样本数为0，实验结果主要来源于基础训练集。
+数据预处理基于字段标准化、缺失值处理、训练测试划分、阈值验证集划分以及预测期血压特征构建来开展，训练阶段主要去选用基础训练集，并且把系统导出的训练样本当作补充来源，在当前模型报告当中，系统导出样本数为0，实验结果主要来源于基础训练集。
 
 模型训练时，数据集被划分为训练集、测试集、阈值验证集和 early-stop 验证集，训练集样本数为 3392，测试集样本数为 848，阈值验证集样本数为 340，early-stop 训练样本数为 2746，early-stop 验证样本数为 306，最终重训样本数为 3052，训练脚本先在 early-stop 验证集上确定最佳迭代轮数，再使用完整训练池重训最终模型，分类阈值在独立阈值集上搜索。
 
@@ -276,7 +272,7 @@ AUC 衡量模型在不同分类阈值下对正负样本的区分能力，不直�
 
 ### 4.1 Prophet血压趋势预测方法
 
-Prophet模型主要被运用于预测普通用户的未来7天血压趋势。在用户录入收缩压、舒张压、心率以及记录时间以后，系统会把这些数据按自然日进行聚合，进而形成每日的收缩压均值以及舒张压均值序列。在预测之前，系统会去检查血压记录所覆盖的自然日数量，要是数据量不足，就不会去创建预测记录，以此来避免在序列过短的时候输出不稳定的结果。
+Prophet模型主要运用以开展普通用户未来7天血压趋势的预测。在用户录入收缩压、舒张压、心率以及记录时间后，系统会把这些数据按自然日进行聚合，并且形成每日的收缩压均值以及舒张压均值序列。在开展预测前，系统会去检查血压记录所覆盖的自然日数量，如果数据量不足，那就不会去创建预测记录，借助此方式避免在序列过短时输出不稳定的结果。
 
 ![图4-1 Prophet 血压趋势预测流程图](./thesis-assets/diagrams/figure-4-1-prophet-bp-trend-flow.png)
 
@@ -294,7 +290,7 @@ Prophet模型并不会在每次预测的时候都进行重新训练，而是采�
 
 ### 4.2 LightGBM风险分类方法
 
-LightGBM风险分类模块会去接收用户的个人风险因素以及Prophet预测期血压特征，进而输出高血压风险概率。用户需要在档案当中去维护好年龄、性别、身高、体重、吸烟情况、降压药使用情况、糖尿病、胆固醇以及血糖等相关信息。系统会根据身高和体重来计算出BMI，然后再把这个数值与Prophet所得到的未来7天收缩压均值、舒张压均值合并在一起，当作模型输入来使用。
+LightGBM风险分类模块会进行用户个人风险因素以及Prophet预测期血压特征的接收，并且输出高血压风险概率。用户需要在档案当中进行年龄、性别、身高、体重、吸烟情况、降压药使用情况、糖尿病、胆固醇以及血糖等相关信息的维护。系统会基于身高以及体重来开展BMI的计算，同时会把这个数值以及Prophet所得到的未来7天收缩压均值、舒张压均值合并在一起，当作模型输入来运用。
 
 ![图4-2 LightGBM 风险分类输入输出图](./thesis-assets/diagrams/figure-4-2-lightgbm-risk-io.png)
 
@@ -319,7 +315,7 @@ LightGBM风险分类模块会去接收用户的个人风险因素以及Prophet�
 
 ![图4-4 Prophet-LightGBM 双模型联合预测算法图解](./thesis-assets/diagrams/figure-4-4-dual-model-algorithm.png)
 
-图4-4呈现出了本文的核心设计。Prophet的输出并不是最终的风险结论，而是LightGBM的动态血压输入；LightGBM的输出也并非临床诊断的结果，而是作为健康管理参考用的原始风险概率。趋势融合模块被放置在两个模型输出的后面，它会综合考虑高血压天数、峰值、斜率以及用药状态等信号，仅仅在概率层面做受约束的小幅度修正，从而使最终的结果能够与近期的血压走势保持一致。
+图4-4进行了该核心设计的呈现。Prophet的输出并非最终的风险结论，而是当作LightGBM的动态血压输入来运用；LightGBM的输出也并非临床诊断结果，而是当作健康管理参考来运用的原始风险概率。趋势融合模块被置于两个模型输出后面，它会去综合考虑高血压天数、峰值、斜率以及用药状态等信号，仅仅在概率层面开展受约束的小幅度修正，从而使最终结果能与近期血压走势保持一致。
 
 融合前，系统从 Prophet 未来 7 天预测点中提取高血压天数比例和趋势斜率等信号：
 
@@ -400,43 +396,36 @@ LightGBM风险分类模块会去接收用户的个人风险因素以及Prophet�
 
 #### 5.2.1 实验分组与模型训练结果
 
-本次实验使用 Hypertension-risk-model-main.csv 数据集，共 4240 条样本，正样本比例为 31.1%，各组实验均采用 threshold_search_mode=recall_priority、seed=42 和 label_mode=diagnosis_plus_rule，训练测试划分、交叉验证折数和最大训练轮数保持一致，在召回优先目标下调整最小 Recall 下限、学习率、缺失值处理策略和 BPMeds 字段处理策略，观察不同配置对分类效果的影响。
+本次实验使用 Hypertension-risk-model-main.csv 数据集，共 4240 条样本，正样本比例为 31.1%，各组实验均采用 threshold_search_mode=recall_priority、seed=42 和 label_mode=diagnosis_plus_rule，训练测试划分、交叉验证折数和最大训练轮数保持一致，在召回优先目标下调整最小 Recall 下限、学习率、缺失值处理策略和 BPMeds 字段处理策略，观察不同配置对分类效果的影响，实验配置见表5-2。
 
 **表5-2 LightGBM 召回优先对照实验配置**
 
-| 实验组 | min_recall | learning_rate | 缺失值策略 | BPMeds 处理 | 设计目的 |
-| --- | ---: | ---: | --- | --- | --- |
-| recall-baseline | 0.75 | 0.05 | native | neutralized | 作为召回优先基础组 |
-| recall-min85 | 0.85 | 0.05 | native | neutralized | 提高召回下限，观察漏判控制效果 |
-| recall-low-lr-long | 0.80 | 0.03 | native | neutralized | 降低学习率并延长训练观察稳定性 |
-| recall-fast-lr-short | 0.75 | 0.10 | native | neutralized | 提高学习率观察快速训练影响 |
-| recall-median-impute | 0.75 | 0.05 | median_impute | neutralized | 使用中位数插补观察缺失值处理影响 |
-| recall-bpmeds-observed | 0.75 | 0.05 | native | observed | 保留用药字段原始观测值 |
+| 实验组 | min_recall | learning_rate | 缺失值策略 | BPMeds处理 |
+| --- | ---: | ---: | --- | --- |
+| recall-baseline | 0.75 | 0.05 | native | neutralized |
+| recall-min85 | 0.85 | 0.05 | native | neutralized |
+| recall-low-lr-long | 0.80 | 0.03 | native | neutralized |
+| recall-fast-lr-short | 0.75 | 0.10 | native | neutralized |
+| recall-median-impute | 0.75 | 0.05 | median_impute | neutralized |
+| recall-bpmeds-observed | 0.75 | 0.05 | native | observed |
 
-在表5-2当中，各组实验都是以召回优先作为共同的前提条件，它们之间的差异主要集中在参数的取值以及特征处理的方式上。同时，实验的目标也比较明确，即是要去尽量识别出高风险的样本，并且在Precision、F1、AUC以及概率误差这几个指标之间，去选择出更为适宜的生产配置。
+在表5-2当中，各组实验均以召回优先作为共同前提，目标是尽量识别出高风险样本，并在 Precision、F1、AUC 以及概率误差之间选择更适合生产使用的配置。各组差异主要体现在最小 Recall 下限、学习率、缺失值策略以及 BPMeds 处理方式上。其中，native 表示不额外填补缺失字段，而是保留缺失状态并交由 LightGBM 原生缺失值分裂机制处理；median_impute 表示使用训练集对应字段的中位数进行填补。BPMeds 表示是否服用降压药，neutralized 表示将该字段统一置为 0，以减少服药状态对保守推理的干扰；observed 表示保留数据集中的原始观测值。具体来看，baseline 组作为基础对照，min85 组用于观察提高召回下限后的漏判控制效果，low-lr 和 fast-lr 组用于观察学习率变化的影响，median 组用于比较中位数插补策略，BPMeds 组则用于观察保留用药字段原始值后的模型表现。
 
 #### 5.2.2 核心性能指标对比
 
-各组调参后的核心性能指标见表 5-3，AUC、PR-AUC 和 Brier Score 用于观察模型排序能力和概率输出质量，Precision、Recall 和 F1 用于观察固定分类阈值下的识别效果，本文系统用于健康风险提醒，模型选择更关注 Recall 和 F1，也要求 Precision 保持在可接受范围内。
+各组调参后的核心性能指标见图5-1和图5-2，AUC、PR-AUC 和 Brier Score 用于观察模型排序能力和概率输出质量，Precision、Recall 和 F1 用于观察固定分类阈值下的识别效果，本文系统用于健康风险提醒，模型选择更关注 Recall 和 F1，也要求 Precision 保持在可接受范围内。
 
-**表5-3 LightGBM 召回优先实验核心指标对比**
+![图5-1 LightGBM 排序能力与概率输出质量对比](./thesis-assets/diagrams/figure-5-1-lightgbm-ranking-probability.png)
 
-| 实验组 | AUC | PR-AUC | Brier Score | Precision | Recall | F1 | Threshold | 最终采用 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| recall-baseline | 0.9498 | 0.8706 | 0.0850 | 0.8293 | 0.7757 | 0.8016 | 0.7019 | 否 |
-| recall-min85 | 0.9498 | 0.8706 | 0.0850 | 0.8246 | 0.8935 | 0.8577 | 0.6503 | 是 |
-| recall-low-lr-long | 0.9501 | 0.8746 | 0.0993 | 0.8264 | 0.8327 | 0.8295 | 0.5769 | 否 |
-| recall-fast-lr-short | 0.9491 | 0.8719 | 0.0831 | 0.8252 | 0.7719 | 0.7976 | 0.7780 | 否 |
-| recall-median-impute | 0.9493 | 0.8740 | 0.0821 | 0.8308 | 0.8403 | 0.8355 | 0.7315 | 否 |
-| recall-bpmeds-observed | 0.9555 | 0.8890 | 0.0773 | 0.8230 | 0.7605 | 0.7905 | 0.7752 | 否 |
+![图5-2 LightGBM 固定阈值分类指标对比](./thesis-assets/diagrams/figure-5-2-lightgbm-classification-threshold.png)
 
-表 5-3 中，recall-min85 的 Recall 为 0.8935，F1 为 0.8577，均为六组实验最高，Precision 保持在 0.8246，提高最小 Recall 下限后，高风险样本漏判明显减少，Precision 没有出现失控，bpmeds_observed 的 AUC、PR-AUC 和 Brier Score 更优，Recall 只有 0.7605，F1 也低于 recall-min85，不符合召回优先的健康提醒目标，本文不单纯按 AUC 选择模型，而是结合使用场景选择 Recall 和 F1 更合适的生产方案。
+图5-1和图5-2显示，recall-min85 的 Recall 为 0.8935，F1 为 0.8577，均为六组实验最高，Precision 保持在 0.8246，提高最小 Recall 下限后，高风险样本漏判明显减少，Precision 没有出现失控。recall-bpmeds-observed 的 AUC、PR-AUC 和 Brier Score 更优，但 Recall 只有 0.7605，F1 也低于 recall-min85，不符合召回优先的健康提醒目标，本文不单纯按 AUC 选择模型，而是结合使用场景选择 Recall 和 F1 更合适的生产方案。
 
 #### 5.2.3 混淆矩阵分析与方案选择
 
-各组实验在测试集上的混淆矩阵见表 5-4，测试集共有 848 个样本，其中正类样本 263 个，负类样本 585 个。
+各组实验在测试集上的混淆矩阵见表5-3，测试集共有 848 个样本，其中正类样本 263 个，负类样本 585 个。
 
-**表5-4 LightGBM 混淆矩阵对比**
+**表5-3 LightGBM 混淆矩阵对比**
 
 | 实验组 | TP | FP | FN | TN | 漏判率 | 误报率 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -447,7 +436,7 @@ LightGBM风险分类模块会去接收用户的个人风险因素以及Prophet�
 | recall-median-impute | 221 | 45 | 42 | 540 | 15.97% | 7.69% |
 | recall-bpmeds-observed | 200 | 43 | 63 | 542 | 23.95% | 7.35% |
 
-混淆矩阵显示，recall-min85 在测试集中识别出 235 个正类样本，仅漏判 28 个，漏判率降至 10.65%，与 recall-baseline 相比，该方案多识别 31 个正类样本，漏判数从 59 个降至 28 个，代价是 FP 从 42 个增加到 50 个，误报率从 7.18% 上升到 8.55%，对于健康管理辅助提醒，这种变化可以接受，因为系统给出的结果是风险提示和健康建议，不是临床确诊。
+表5-3显示，recall-min85 在测试集中识别出 235 个正类样本，仅漏判 28 个，漏判率降至 10.65%，与 recall-baseline 相比，该方案多识别 31 个正类样本，漏判数从 59 个降至 28 个，代价是 FP 从 42 个增加到 50 个，误报率从 7.18% 上升到 8.55%，对于健康管理辅助提醒，这种变化可以接受，因为系统给出的结果是风险提示和健康建议，不是临床确诊。
 
 bpmeds_observed 的 AUC 为 0.9555，在六组实验中最高，但 TP 只有 200 个，FN 达到 63 个，漏判率为 23.95%，该方案排序能力较强，在当前召回优先阈值目标下没有更好地识别正类样本，本文采用 recall-min85，也就是 threshold_search_mode=recall_priority 且 threshold_min_recall=0.85 的 LightGBM 风险分类模型。
 
@@ -455,60 +444,37 @@ bpmeds_observed 的 AUC 为 0.9555，在六组实验中最高，但 TP 只有 20
 
 ### 5.3 特征重要性分析
 
-LightGBM 可以输出基于 gain 的特征重要性，用来观察不同输入特征对分类结果的贡献，主要特征的重要性占比见表 5-5。
+LightGBM 可以输出基于 gain 的特征重要性，用来观察不同输入特征对分类结果的贡献，主要特征的重要性占比见图5-3。
 
-**表5-5 LightGBM 特征重要性**
+![图5-3 LightGBM 特征重要性对比](./thesis-assets/diagrams/figure-5-3-lightgbm-feature-importance.png)
 
-| 排名 | 特征 | gain 重要性 | 占总 gain 比例 |
-| --- | --- | ---: | ---: |
-| 1 | sysBP | 24158.3 | 74.2% |
-| 2 | diaBP | 6348.3 | 19.5% |
-| 3 | BMI | 653.5 | 2.0% |
-| 4 | age | 581.3 | 1.8% |
-| 5 | heartRate | 340.3 | 1.1% |
-| 6 | totChol | 200.3 | 0.6% |
-| 7 | glucose | 126.0 | 0.4% |
-| 8 | cigsPerDay | 103.4 | 0.3% |
-| 9 | male | 34.3 | 0.1% |
-| 10 | currentSmoker | 0.0 | 0.0% |
-| 11 | BPMeds | 0.0 | 0.0% |
-| 12 | diabetes | 0.0 | 0.0% |
+在图5-3当中，sysBP以及diaBP的特征增益占比分别达到了74.2%和19.5%，合计占比已经高达93.7%，这意味着血压相关的特征是模型进行风险判断时的主要依据。这一实验结果充分支持了把Prophet预测期血压特征接入到LightGBM当中的设计方案。至于BMI、年龄以及心率等特征，它们依然拥有一定的贡献度，结构化的风险因素会对模型的输出起到良好的补充作用。
 
-在表5-5当中，sysBP以及diaBP的特征增益占比分别达到了74.2%和19.5%，合计占比已经高达93.7%，这意味着血压相关的特征是模型进行风险判断时的主要依据。这一实验结果充分支持了把Prophet预测期血压特征接入到LightGBM当中的设计方案。至于BMI、年龄以及心率等特征，它们依然拥有一定的贡献度，结构化的风险因素会对模型的输出起到良好的补充作用。
-
-此外，像糖尿病、是否吸烟、性别以及是否服用降压药这些特征的增益则相对较低，这主要还是由于样本的分布情况、数据的缺失比例、变量的编码方式，亦或是该数据集中它们本身区分度就不够高所导致的。对于树模型而言，后续的优化工作更适宜从样本质量、特征工程、外部验证以及阈值策略这几个方面来开展，而不应该直接套用神经网络当中那种梯度优化的表述方式。
+此外，像糖尿病、是否吸烟、性别以及是否服用降压药等特征所带来的增益相对较低，这主要缘由囊括样本的分布情况、数据的缺失比例、变量的编码方式，亦或是该数据集当中它本身区分度就不够高。针对树模型，后续的优化工作更适宜从样本质量、特征工程、外部验证以及阈值策略这几个方面去开展，而不应该把神经网络当中那种梯度优化的表述方式直接拿来套用。
 
 ### 5.4 Prophet预测精度回测分析
 
-Prophet主要承担起了用户级血压趋势预测的任务。和LightGBM有所不同的是，它并不会运用统一的离线训练集来预先生成所有的用户模型，而是在用户去发起7天风险预测的这个时间点，根据个人的历史血压记录来开展训练或者进行模型复用，这样能够让趋势预测的结果更加贴近用户近期以来的血压变化情况。
+Prophet主要开展用户级血压趋势的预测工作。与LightGBM有所不同的是，它并不会借助统一的离线训练集去进行所有用户模型的预先生成，而是在用户去发起7天风险预测的这个时间点上，基于个人的历史血压记录来开展训练或者进行模型复用，这样能够使趋势预测的结果更加契合用户近期以来的血压变化情况。
 
 系统默认选用最近90天的日均血压序列来作为训练窗口，这么做是为了去兼顾系统的响应速度以及预测的稳定性。要是用户的历史记录超过了90天，那么系统就会去截取近期的数据，并且会在预测记录的训练说明当中把窗口截断的相关信息给保留下来。当用户的记录天数比较少，或者血压波动比较大的时候，系统则会去生成一份置信度较低的说明。模型资产表当中仅仅保存了进行模型复用所需要的版本、数据签名、训练截止日期以及文件存储键，而普通用户最终所看到的，仅仅是未来7天的趋势、风险等级以及相关的建议摘要。
 
 模型复用与重训阈值策略用于减少重复训练，新增血压自然日未达到阈值时复用已保存的 Prophet 模型，达到阈值时重新训练并更新模型元数据。
 
-本文使用 Prophet 内置 cross_validation 对五种模拟血压 profile 进行 7 天预测回测，用来观察不同数据条件下的预测能力，五种 profile 分别为正常稳定、偏高稳定、高血压稳定、上升趋势和高波动，回测设置 30 天、60 天和 90 天三种历史数据长度，结果见表 5-6。
+本文使用 Prophet 内置 cross_validation 对五种模拟血压 profile 进行 7 天预测回测，用来观察不同数据条件下的预测能力，五种 profile 分别为正常稳定、偏高稳定、高血压稳定、上升趋势和高波动，回测设置 30 天、60 天和 90 天三种历史数据长度，结果见图5-4。MAE 即平均绝对误差，用于衡量预测值与真实值之间的平均偏差，单位与原始血压指标一致，本文中为 mmHg。
 
-**表5-6 Prophet 7 天预测收缩压 MAE 单位 mmHg**
+![图5-4 Prophet 7天预测收缩压MAE对比](./thesis-assets/diagrams/figure-5-4-prophet-mae-backtest.png)
 
-| Profile | 30天 | 60天 | 90天 |
-| --- | ---: | ---: | ---: |
-| 正常稳定 约120/80 | 5.19 | 3.02 | 3.42 |
-| 偏高稳定 约135/87 | 6.02 | 3.77 | 4.28 |
-| 高血压稳定 约155/95 | 7.09 | 4.52 | 5.14 |
-| 上升趋势 120→145 | 5.21 | 3.02 | 3.43 |
-| 高波动 约130/85±大 | 12.92 | 9.91 | 10.41 |
-
-表 5-6 显示，稳定血压 profile 在历史记录达到 30 天及以上时，Prophet 7 天预测的收缩压 MAE 处于 3 到 7 mmHg 范围，60 天数据下 MAE 最低，高波动 profile 的 MAE 约为 10 到 13 mmHg，明显高于稳定 profile，将此类序列标记为 volatile 参数画像并降低置信度较为合理，上升趋势 profile 的 MAE 与正常稳定接近，说明 Prophet 可以捕获短期趋势方向。
+图5-4显示，稳定血压 profile 在历史记录达到 30 天及以上时，Prophet 7 天预测的收缩压 MAE 处于 3 到 7 mmHg 范围，60 天数据下 MAE 最低，高波动 profile 的 MAE 约为 10 到 13 mmHg，明显高于稳定 profile，将此类序列标记为 volatile 参数画像并降低置信度较为合理，上升趋势 profile 的 MAE 与正常稳定接近，说明 Prophet 可以捕获短期趋势方向。
 
 本文不将 Prophet 回测指标解释为临床预测准确率，Prophet 输出的主要作用是为 LightGBM 提供预测期血压特征，并增强预测结果的趋势解释。
 
 ### 5.5 趋势融合效果分析
 
-在LightGBM输出原始的风险概率之后，趋势融合模块会去结合Prophet所预测出来的未来7天血压趋势信号，以及相关的用药信号，来对这些概率开展进一步的调整工作。为此，本文专门构造出了8个典型的血压预测场景，并且为每一个场景都去模拟了低、中、高这三个层面的原始概率水平，从而总共形成了24次的融合评价。其中所涉及到的融合信号涵盖了高血压天数、血压峰值、上升趋势、稳定低趋势以及药物未控制这五大类。
+在LightGBM输出原始风险概率之后，趋势融合模块会把Prophet所预测出的未来7天血压趋势信号以及相关用药信号结合起来，从而对这些概率开展进一步的调整工作。为此，专门构造出了8个典型的血压预测场景，并且针对每一个场景都去开展了低、中、高这三个层面原始概率水平的模拟，进而总共形成了24次的融合评价。其中所涉及到的融合信号主要涵盖了高血压天数、血压峰值、上升趋势、稳定低趋势以及药物未控制这五大类。
 
-部分场景的融合效果见表 5-7。
+部分场景的融合效果见表5-4。
 
-**表5-7 趋势融合效果部分场景**
+**表5-4 趋势融合效果部分场景**
 
 | 场景 | 原始概率 | 融合后概率 | 调整量 | 触发信号 |
 | --- | ---: | ---: | ---: | --- |
