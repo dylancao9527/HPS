@@ -164,11 +164,37 @@ DEMO_USERS = [
             "diagnosis": None,
         },
     },
+    {
+        "username": "shit",
+        "email": "shit@example.com",
+        "label": "固定登录样例",
+        "note": "使用固定密码 A1111111，适合快速登录验证基础流程",
+        "password": "A1111111",
+        "bp_days": 14,
+        "systolic": 122,
+        "diastolic": 78,
+        "heart_rate": 72,
+        "bp_pattern": [0, 1, -1, 2, -2, 0, 1],
+        "profile": {
+            "age": 39,
+            "male": 1,
+            "height": 175,
+            "weight": 72,
+            "current_smoker": 0,
+            "cigs_per_day": 0,
+            "bp_meds": 0,
+            "diabetes": 0,
+            "tot_chol": 186,
+            "glucose": 91,
+            "diagnosis": None,
+        },
+    },
 ]
 
 
 def _demo_user_filter():
     filters = [User.username.like(f"{prefix}%") for prefix in LEGACY_DEMO_PREFIXES]
+    filters.extend(User.username == spec["username"] for spec in DEMO_USERS)
     query_filter = filters[0]
     for item in filters[1:]:
         query_filter = query_filter | item
@@ -192,7 +218,7 @@ def _create_demo_user(spec, now, password):
     user = User()
     user.username = spec["username"]
     user.email = spec["email"]
-    user.set_password(password)
+    user.set_password(spec.get("password", password))
     db.session.add(user)
     db.session.flush()
 
@@ -226,13 +252,31 @@ def _create_demo_user(spec, now, password):
                 recorded_at=now - timedelta(days=spec["bp_days"] - day - 1),
             )
         )
-    return {
+    created = {
         "username": user.username,
         "label": spec["label"],
         "bp_record_days": spec["bp_days"],
         "note": spec["note"],
         "diagnosis": _diagnosis_label(profile.diagnosis),
     }
+    if "password" in spec:
+        created["password"] = spec["password"]
+    return created
+
+
+def _summarize_existing_user(user, specs_by_username):
+    profile = user.profile
+    item = {
+        "username": user.username,
+        "label": profile.nickname if profile else user.username,
+        "bp_record_days": user.bp_records.count(),
+        "diagnosis": _diagnosis_label(profile.diagnosis if profile else None),
+        "note": "已存在的展示用户",
+    }
+    spec_password = specs_by_username.get(user.username, {}).get("password")
+    if spec_password:
+        item["password"] = spec_password
+    return item
 
 
 def seed_demo_users(*, reset_existing=False, password):
@@ -242,34 +286,28 @@ def seed_demo_users(*, reset_existing=False, password):
         for user in existing:
             db.session.delete(user)
         db.session.flush()
+        existing = []
 
-    if existing and not reset_existing:
-        return {
-            "deleted_existing": 0,
-            "created_count": 0,
-            "users": [
-                {
-                    "username": user.username,
-                    "label": user.profile.nickname if user.profile else user.username,
-                    "bp_record_days": user.bp_records.count(),
-                    "diagnosis": _diagnosis_label(
-                        user.profile.diagnosis if user.profile else None
-                    ),
-                    "note": "已存在的展示用户",
-                }
-                for user in existing
-            ],
-        }
-
+    specs_by_username = {spec["username"]: spec for spec in DEMO_USERS}
+    existing_usernames = {user.username for user in existing}
     now = utc_now_naive()
     created = []
     for spec in DEMO_USERS:
+        if spec["username"] in existing_usernames:
+            continue
         created.append(_create_demo_user(spec, now, password))
-    db.session.commit()
+    if created:
+        db.session.commit()
     return {
         "deleted_existing": deleted_existing,
         "created_count": len(created),
-        "users": created,
+        "users": [
+            *[
+                _summarize_existing_user(user, specs_by_username)
+                for user in existing
+            ],
+            *created,
+        ],
     }
 
 
@@ -283,7 +321,7 @@ def parse_args(argv=None):
     parser.add_argument(
         "--reset-existing",
         action="store_true",
-        help="删除已有 demo_showcase_/demo_compare_ 前缀用户后重新生成",
+        help="删除已有 demo_showcase_/demo_compare_ 前缀用户和脚本中定义的展示用户后重新生成",
     )
     parser.add_argument(
         "--yes-i-understand",
@@ -310,7 +348,10 @@ def main(argv=None):
     if not args.apply:
         print("预览模式：不会连接应用或写入数据库。添加 --apply 才会生成 demo 用户。")
         if args.reset_existing:
-            print("预览模式：执行时会删除已有 demo_showcase_/demo_compare_ 前缀用户。")
+            print(
+                "预览模式：执行时会删除已有 demo_showcase_/demo_compare_ "
+                "前缀用户和脚本中定义的展示用户。"
+            )
         return
 
     password = args.password or _generate_demo_password()
@@ -331,6 +372,8 @@ def main(argv=None):
             f"[{item['bp_record_days']} 天记录, 诊断反馈: {item['diagnosis']}] "
             f"{item['note']}"
         )
+        if item.get("password"):
+            print(f"    固定密码: {item['password']}")
 
 
 if __name__ == "__main__":
