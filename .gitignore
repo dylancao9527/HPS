@@ -45,3 +45,4 @@ backend/ml_models_previous/
 backend/ml_runs
 .agents
 .claude
+*.temp.*
